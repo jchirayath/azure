@@ -47,7 +47,8 @@
   "variables": {
     "imagePublisher": "Canonical",
     "imageOffer": "UbuntuServer",
-    "OSDiskName": "osdiskforlinuxsimple",
+    "OSDiskName1": "osdiskforyuma1",
+    "OSDiskName2": "osdiskforyuma2",
     "nicName1": "vm1VMNic",
     "nicName2": "vm2VMNic",
     "addressPrefix": "10.50.0.0/16",
@@ -200,7 +201,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('OSDiskName'),'.vhd')]"
+              "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('OSDiskName1'),'.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -215,21 +216,21 @@
         }
       }
     },
-        {
+    {
       "apiVersion": "2015-05-01-preview",
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[variables('vmName1')]",
+      "name": "[variables('vmName2')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', parameters('newStorageAccountName'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName1'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName2'))]"
       ],
       "properties": {
         "hardwareProfile": {
           "vmSize": "[variables('vmSize')]"
         },
         "osProfile": {
-          "computerName": "[variables('vmName1')]",
+          "computerName": "[variables('vmName2')]",
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]"
         },
@@ -243,7 +244,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('OSDiskName'),'.vhd')]"
+              "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('OSDiskName2'),'.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -252,7 +253,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName1'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName2'))]"
             }
           ]
         }
@@ -273,7 +274,7 @@
         "autoUpgradeMinorVersion": true,
         "settings": {
           "fileUris": [
-            "https://raw.githubusercontent.com/jchirayath/aws/master/install_script.sh"
+            "https://raw.githubusercontent.com/jchirayath/azure/master/VMCreate/install_script.sh"
           ],
           "commandToExecute": "sh install_script.sh"
         }
@@ -294,7 +295,7 @@
         "autoUpgradeMinorVersion": true,
         "settings": {
           "fileUris": [
-            "https://raw.githubusercontent.com/jchirayath/aws/master/install_script.sh"
+            "https://raw.githubusercontent.com/jchirayath/azure/master/VMCreate/install_script.sh"
           ],
           "commandToExecute": "sh install_script.sh"
         }

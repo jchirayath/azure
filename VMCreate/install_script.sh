@@ -37,12 +37,12 @@ docker run --name some-guacamole --link some-guacd:guacd \
 
 # Fix Guacamole Tomcat Configuration
 # Get Tomcat Config and Update
-wget https://raw.githubusercontent.com/jchirayath/aws/master/s3/config/tomcat-users.xml
+wget https://raw.githubusercontent.com/jchirayath/azure/master/VMCreate/tomcat-users.xml
 docker cp tomcat-users.xml some-guacamole:/usr/local/tomcat/conf/tomcat-users.xml 
 docker restart some-guacamole 
 
 # Get Updated Index.htm
-wget https://raw.githubusercontent.com/jchirayath/aws/master/s3/config/index.html
+wget https://raw.githubusercontent.com/jchirayath/azure/master/VMCreate/index.html
 cp index.html /var/www/html/index.html
 
 # Install and configure Mail
