@@ -43,9 +43,9 @@
     "imageOffer": "WindowsServer",
     "OSDiskName": "osdiskforWin2016",
     "nicName": "myVMNic",
-    "addressPrefix": "10.51.0.0/16",
+    "addressPrefix": "10.52.0.0/16",
     "subnetName": "Subnet",
-    "subnetPrefix": "10.51.2.0/24",
+    "subnetPrefix": "10.52.1.0/24",
     "storageAccountType": "Standard_LRS",
     "publicIPAddressName": "myPublicIP",
     "publicIPAddressType": "Dynamic",
@@ -79,7 +79,7 @@
       }
     },
     {
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "2016-04-30-preview",
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
       "location": "[resourceGroup().location]",
