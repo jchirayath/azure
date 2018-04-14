@@ -51,7 +51,7 @@
     "publicIPAddressType": "Dynamic",
     "vmStorageAccountContainerName": "vhds",
     "vmName": "Win2016VM",
-    "vmSize": "Standard_A0",
+    "vmSize": "Standard_DS1",
     "virtualNetworkName": "WestUSVNET",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
