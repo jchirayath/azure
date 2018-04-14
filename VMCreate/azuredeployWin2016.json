@@ -60,14 +60,14 @@
     {	
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[parameters('newStorageAccountName')]",
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "2016-04-30-preview",
       "location": "[resourceGroup().location]",
       "properties": {
         "accountType": "[variables('storageAccountType')]"
       }
     },
     {
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "2016-04-30-preview",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('publicIPAddressName')]",
       "location": "[resourceGroup().location]",
@@ -79,7 +79,7 @@
       }
     },
     {
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "2016-04-30-preview",
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
       "location": "[resourceGroup().location]",
@@ -100,7 +100,7 @@
       }
     },
     {
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "2016-04-30-preview",
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[variables('nicName')]",
       "location": "[resourceGroup().location]",
@@ -126,7 +126,7 @@
       }
     },
     {
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "2016-04-30-preview",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[variables('vmName')]",
       "location": "[resourceGroup().location]",
