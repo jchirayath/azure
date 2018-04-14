@@ -31,7 +31,7 @@
       "defaultValue": "2016-Datacenter",
       "allowedValues": [
         "2012-R2-Datacenter",
-        "12008-R2-SP1"
+        "2016-Datacenter"
       ],
       "metadata": {
         "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version. Allowed values: 12.04.5-LTS, 14.04.2-LTS, 15.10."
