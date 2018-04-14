@@ -31,6 +31,7 @@
       "metadata": {
         "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
       }
+    },
     "ubuntuOSVersion": {
       "type": "string",
       "defaultValue": "14.04.2-LTS",
@@ -60,7 +61,7 @@
     "publicIPAddressType": "Dynamic",
     "vmStorageAccountContainerName": "vhds",
     "vmName1": "YUMAWEB1",
-    "vmName1": "YUMAWEB2",
+    "vmName2": "YUMAWEB2",
     "vmSize": "Standard_A0",
     "virtualNetworkName": "WestUSVNET",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
@@ -259,7 +260,7 @@
         }
       }
     },
-        {
+    {
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(variables('vmName1'),'/newuserscript')]",
       "apiVersion": "2015-05-01-preview",
