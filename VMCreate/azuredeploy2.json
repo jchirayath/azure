@@ -298,7 +298,7 @@
           "fileUris": [
             "https://raw.githubusercontent.com/jchirayath/azure/master/VMCreate/install_script.sh"
           ],
-          "commandToExecute": "sh install_script.sh"
+          "commandToExecute": "bash install_script.sh"
         }
       }
     }
