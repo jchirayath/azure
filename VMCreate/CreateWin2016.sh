@@ -3,7 +3,7 @@ git commit -a -m "Added Updates"
 git push
 az account show
 az account set --subscription JacobAzure
-az group create --name RG-JacobAzureWindows --location "West US"
+az group create --name RG-JacobAzureWindows --location "West US2"
 az group deployment create \
     --name WindowsVM \
     --resource-group RG-JacobAzureWindows \
