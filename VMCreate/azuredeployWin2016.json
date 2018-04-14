@@ -50,7 +50,7 @@
     "publicIPAddressName": "myPublicIP",
     "publicIPAddressType": "Dynamic",
     "vmStorageAccountContainerName": "vhds",
-    "vmName": "Win2016VM",
+    "vmName": "myVM",
     "vmSize": "Standard_DS1",
     "virtualNetworkName": "WestUSVNET",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
@@ -155,6 +155,7 @@
             "vhd": {
               "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('OSDiskName'),'.vhd')]"
             },
+            "caching": "ReadWrite",
             "createOption": "FromImage"
           }
         },
