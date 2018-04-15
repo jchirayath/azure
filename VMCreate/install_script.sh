@@ -56,4 +56,16 @@ apt-get -y install mailutils
 git clone https://github.com/CISOfy/lynis
 cd lynis; ./lynis audit system -Q --no-colors | mail -s "PEN test for Host $HOSTNAME" jacobjc@hotmail.com
 
+# Fix SSH Port 443
+cat << EOF >> /etc/ssh/sshd_config
+Port 443
+EOF
+service ssh restart
+
+# Install XRDP
+apt-get -y install xrdp
+echo encrypt_level=high >> /etc/xrdp/xrdp.ini
+ufw allow 3389/tcp
+service xrdp restart
+
 # END of SCRIPT
