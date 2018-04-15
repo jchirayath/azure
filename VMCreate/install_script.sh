@@ -75,4 +75,13 @@ apt-get -y install fail2ban
 #sed -i 's/# bantime/bantime/g' /etc/fail2ban/jail.conf
 service fail2ban restart 
 
+# Disable IPv6
+cat << EOF >> /etc/sysctl.conf
+
+net.ipv6.conf.all.disable_ipv6 = 1
+net.ipv6.conf.default.disable_ipv6 = 1
+net.ipv6.conf.lo.disable_ipv6 = 1
+EOF
+
+
 # END of SCRIPT
