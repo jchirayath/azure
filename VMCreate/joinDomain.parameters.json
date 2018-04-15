@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "West US2"
+        },
+        "vmList": {
+            "value": "yumaWin2016"
+        },
+        "domainJoinUserName": {
+            "value": "aspl.net\\jacobc"
+        },
+        "domainJoinUserPassword": {
+            "value": "GEN-PASSWORD"
+        },
+        "domainFQDN": {
+            "value": "aspl.net"
+        }
+    }
+}
