@@ -46,8 +46,10 @@ wget https://raw.githubusercontent.com/jchirayath/azure/master/VMCreate/index.ht
 cp index.html /var/www/html/index.html
 
 # Install and configure Mail
-debconf-set-selections <<< "postfix postfix/mailname string $HOSTNAME"
-debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
+#debconf-set-selections <<< "postfix postfix/mailname string $HOSTNAME"
+#debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
+echo "postfix postfix/mailname string $HOSTNAME" | debconf-set-selections
+echo "postfix postfix/main_mailer_type string 'Internet Site'" | debconf-set-selections 
 apt-get -y install mailutils
 
 # Install and run Lynis Security Scanner
