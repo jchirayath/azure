@@ -10,7 +10,7 @@ apt-get -y install php
 apt-get -y install php-mysql
 apt-get -y install mysql
 #apt-get -y install nginx
-#apt-get -y install privoxy
+apt-get -y install privoxy
 apt-get -y install sssd adcli realmd samba-common
 #apt-get -y install sssd realmd adcli krb5-workstation samba-common
 apt-get -y install expect unzip nmap nfs-utils rsync screen diffutils lsof 
@@ -58,6 +58,7 @@ cd lynis; ./lynis audit system -Q --no-colors | mail -s "PEN test for Host $HOST
 
 # Fix SSH Port 443
 cat << EOF >> /etc/ssh/sshd_config
+
 Port 22
 Port 443
 EOF
