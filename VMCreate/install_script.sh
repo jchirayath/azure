@@ -58,6 +58,7 @@ cd lynis; ./lynis audit system -Q --no-colors | mail -s "PEN test for Host $HOST
 
 # Fix SSH Port 443
 cat << EOF >> /etc/ssh/sshd_config
+Port 22
 Port 443
 EOF
 service ssh restart
@@ -67,5 +68,10 @@ apt-get -y install xrdp
 echo encrypt_level=high >> /etc/xrdp/xrdp.ini
 ufw allow 3389/tcp
 service xrdp restart
+
+# Install fail2ban
+apt-get -y install fail2ban
+#sed -i 's/# bantime/bantime/g' /etc/fail2ban/jail.conf
+service fail2ban restart 
 
 # END of SCRIPT
