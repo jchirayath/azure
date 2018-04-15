@@ -28,9 +28,10 @@
     },
     "ubuntuOSVersion": {
       "type": "string",
-      "defaultValue": "14.04.2-LTS",
+      "defaultValue": "16.04-LTS",
       "allowedValues": [
         "12.04.5-LTS",
+        "16.04-LTS",
         "14.04.2-LTS",
         "15.10"
       ],
@@ -51,7 +52,7 @@
     "publicIPAddressName": "yumaPublicIP",
     "publicIPAddressType": "Dynamic",
     "vmStorageAccountContainerName": "vhds",
-    "vmName": "YUMA",
+    "vmName": "YUMAWEB",
     "vmSize": "Standard_A0",
     "virtualNetworkName": "WestUSVNET",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
@@ -184,7 +185,7 @@
         "autoUpgradeMinorVersion": true,
         "settings": {
           "fileUris": [
-            "https://raw.githubusercontent.com/jchirayath/aws/master/install_script.sh"
+            "https://raw.githubusercontent.com/jchirayath/azure/master/VMCreate/install_script.sh"
           ],
           "commandToExecute": "sh install_script.sh"
         }
