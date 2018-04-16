@@ -11,10 +11,10 @@ apt-get -y install php-mysql
 apt-get -y install mysql
 #apt-get -y install nginx
 apt-get -y install privoxy
-#apt-get -y install sssd adcli realmd samba-common
+apt-get -y install sssd adcli realmd samba-common
 #apt-get -y install sssd realmd adcli krb5-workstation samba-common
-#apt-get -y install expect unzip nmap nfs-utils rsync screen diffutils lsof 
-#apt-get -y install tcpdump telnet nc traceroute wget perl curl
+apt-get -y install expect unzip nmap nfs-utils rsync screen diffutils lsof 
+apt-get -y install tcpdump telnet nc traceroute wget perl curl
 
 # Start Docker Service
 sudo service docker start
@@ -65,10 +65,10 @@ EOF
 service ssh restart
 
 # Install XRDP
-#apt-get -y install xrdp
-#echo encrypt_level=high >> /etc/xrdp/xrdp.ini
-#ufw allow 3389/tcp
-#service xrdp restart
+apt-get -y install xrdp
+echo encrypt_level=high >> /etc/xrdp/xrdp.ini
+ufw allow 3389/tcp
+service xrdp restart
 
 # Install fail2ban
 apt-get -y install fail2ban
