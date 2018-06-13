@@ -8,4 +8,4 @@ az group deployment create \
     --name LinuxVM \
     --resource-group RG-IgniteTest \
     --template-file azuredeployjc.json \
-    --parameters @azuredeploy.parameters.json
+    --parameters @RG-IgniteTest.parameters.json
