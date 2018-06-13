@@ -4,7 +4,7 @@
   "parameters": {
     "newStorageAccountName": {
       "value": "yumastorage41"
-    }
+    },
     "adminUsername": {
       "value": "jacobc"
     },
