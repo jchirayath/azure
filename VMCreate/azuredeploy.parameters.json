@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "newStorageAccountName": {
-      "value": "yumastorage417"
+      "value": "yumastorage41"
     }
     "adminUsername": {
       "value": "jacobc"
