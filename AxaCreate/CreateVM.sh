@@ -17,16 +17,14 @@ DNS_HOSTNAME="axa"
 if ! az network public-ip show --resource-group DefaultResourceGroup-WUS --name ${DNS_HOSTNAME}-ip &>/dev/null; then
     az network public-ip create --resource-group DefaultResourceGroup-WUS --name ${DNS_HOSTNAME}-ip --dns-name ${DNS_HOSTNAME}
 fi
-# Check if the VM exists
-if ! az vm show --resource-group DefaultResourceGroup-WUS --name axa &>/dev/null; then
-    # Create the VM
-    az vm create \
-        --resource-group DefaultResourceGroup-WUS \
-        --name axa \
-        --image UbuntuLatest \
-        --ssh-key-value /.ssh/azure_id.pub \
-        --admin-username azureuser
-fi
+
+# Create the VM
+az vm create \
+    --resource-group DefaultResourceGroup-WUS \
+    --name axa \
+    --image UbuntuLatest \
+    --ssh-key-value /.ssh/azure_id.pub \
+    --admin-username azureuser
 
 # Add a custom script extension to the VM to run an install script
 az vm extension set \
