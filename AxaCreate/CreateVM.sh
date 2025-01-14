@@ -19,32 +19,35 @@ VM_AZURE_KEY="azure_id"
 VM_DISK_SIZE="50"
 
 # Create azure resource group called rg-VMs-westus3 if it does not exist
-if ! az group show --name $VM_RESOURCE_GROUP-$VM_REGION &>/dev/null; then
-    az group create --name $VM_RESOURCE_GROUP-$VM_REGION --location $VM_REGION
-fi
+az group create --name $VM_RESOURCE_GROUP-$VM_REGION --location $VM_REGION
 # Exit if any command fails
 set -e
 
-
 # Check if the DNS name is available
-if ! az network public-ip show --resource-group DefaultResourceGroup-WUS --name ${VM_HOSTNAME}-ip &>/dev/null; then
-    az network public-ip create --resource-group DefaultResourceGroup-WUS --name ${VM_HOSTNAME}-ip --dns-name ${DNS_HOSTNAME}
+if ! az network public-ip show --resource-group $VM_RESOURCE_GROUP-$VM_REGION --name ${VM_HOSTNAME}-ip &>/dev/null; then
+    az network public-ip create --resource-group $VM_RESOURCE_GROUP-$VM_REGION --name ${VM_HOSTNAME}-ip --dns-name ${DNS_HOSTNAME}
 fi
 # Exit if any command fails
 set -e
 
 # Create a network security group
 az network nsg create --resource-group $VM_RESOURCE_GROUP-$VM_REGION --name ${VM_HOSTNAME}-nsg
+# Exit if any command fails
+set -e
 
 # Create network security group rules
 az network nsg rule create --resource-group $VM_RESOURCE_GROUP-$VM_REGION --nsg-name ${VM_HOSTNAME}-nsg --name AllowSSH --protocol tcp --priority 1000 --destination-port-range 22 --access allow
 az network nsg rule create --resource-group $VM_RESOURCE_GROUP-$VM_REGION --nsg-name ${VM_HOSTNAME}-nsg --name AllowHTTP --protocol tcp --priority 1010 --destination-port-range 80 --access allow
 az network nsg rule create --resource-group $VM_RESOURCE_GROUP-$VM_REGION --nsg-name ${VM_HOSTNAME}-nsg --name AllowHTTPS --protocol tcp --priority 1020 --destination-port-range 443 --access allow
 az network nsg rule create --resource-group $VM_RESOURCE_GROUP-$VM_REGION --nsg-name ${VM_HOSTNAME}-nsg --name Allow8080 --protocol tcp --priority 1030 --destination-port-range 8080 --access allow
+# Exit if any command fails
+set -e
 
 # Associate the network security group with the VM's network interface
 NIC_ID=$(az vm show --resource-group $VM_RESOURCE_GROUP-$VM_REGION --name $DNS_HOSTNAME --query 'networkProfile.networkInterfaces[0].id' -o tsv)
 az network nic update --ids $NIC_ID --network-security-group ${VM_HOSTNAME}-nsg
+# Exit if any command fails
+set -e
 
 # Create the VM
 az vm create \
