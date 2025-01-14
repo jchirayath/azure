@@ -52,7 +52,7 @@ set -e
 # Create the VM
 az vm create \
     --resource-group rg-VMs-westus3 \
-    --name $VM_HOSTNAME_HOSTNAME \
+    --name $VM_HOSTNAME \
     --image $VM_OS   \
     --size $VM_SIZE \
     --assign-identity \
