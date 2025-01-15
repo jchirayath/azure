@@ -16,7 +16,7 @@ apt-get -y install tcpdump telnet netcat traceroute wget perl curl
 apt-get -y install net-tools
 
 # Stop Apache
-service stop apache2
+service apache2 stop
 
 # Install Azure CLI
 AZ_REPO=$(lsb_release -cs)
@@ -27,23 +27,18 @@ apt-get install azure-cli
 
 # Assumption is that DBs are hosted on GearHost.com
 # That way I dont need Pay for a database service in Azure seperately.
-
-# Create Secret in Azure Key Vault
-VAULT_NAME="kv-aspl-eastus"
-myMyuSQLHOST=“den1.mysql6.gear.host”
-myUser=“guacamoledb”
-myPassword=“Of022_E5KvL-”
-az keyvault secret set --vault-name $VAULT_NAME --name "guacamoledbhost" --value $myMyuSQLHOST
-az keyvault secret set --vault-name $VAULT_NAME --name "guacamoledbuser" --value $myUser
-az keyvault secret set --vault-name $VAULT_NAME --name "guacamoledbpass" --value $myPassword
-
 # Get hostname from Azure Key Vault
+VM_REGION="westus3"
+VAULT_NAME="kv-aspl-$VM_REGION"
+EMAIL_USER='jacobc@aspl.net'
+
+
 myMyuSQLHOST=$(az keyvault secret show --vault-name $VAULT_NAME --name "guacamoledbhost" --query value -o tsv)
 myUser=$(az keyvault secret show --vault-name $VAULT_NAME --name "guacamoledbuser" --query value -o tsv)
 myPassword=$(az keyvault secret show --vault-name $VAULT_NAME --name "guacamoledbpass" --query value -o tsv)
 
 # Define Web Hostname
-myHOST=“axa.eastus2.cloudapp.azure.com”
+myHOST=“axa.$VM_REGION.cloudapp.azure.com”
 
 # Guacamole Install
 docker run --name some-guacd -d guacamole/guacd
@@ -93,7 +88,7 @@ cp usr-share-nginx-html-index.html /usr/share/nginx/html/index.html
 apt-get -y install postfix mailutils
 
 # Configure Postfix
-debconf-set-selections <<< "postfix postfix/mailname string $HOSTNAME"
+debconf-set-selections <<< "postfix postfix/mailname string $myHOST"
 debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
 dpkg-reconfigure -f noninteractive postfix
 
@@ -103,11 +98,14 @@ systemctl enable postfix
 
 # Install and run Lynis Security Scanner
 apt-get -y install lynis
-lynis audit system -Q --no-colors | mail -s "PEN test for Host $HOSTNAME" jacobjc@aspl.net
-git clone https://github.com/CISOfy/lynis
+lynis audit system -Q --no-colors | mail -s "PEN test for Host $myHOST" $EMAIL_USER
+#git clone https://github.com/CISOfy/lynis
 
 # Install Certificate for Server
 apt install python3-certbot-apache
 apt install python3-certbot-nginx
-certbot --apache -d axa.eastus2.cloudapp.azure.com --non-interactive --agree-tos -m jacobc@aspl.net
-certbot --nginx -d axa.eastus2.cloudapp.azure.com --non-interactive --agree-tos -m jacobc@aspl.net
+certbot --apache -d $myHOST --non-interactive --agree-tos -m $EMAIL_USER
+certbot --nginx -d $myHOST --non-interactive --agree-tos -m $EMAIL_USER
+
+# install cloudpanel
+curl -sSL https://installer.cloudpanel.io/ce/v2/install.sh | sudo bash
