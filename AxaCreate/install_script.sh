@@ -1,126 +1,126 @@
 #!/bin/bash
 
-# Exit if any command fails
-set -e
+# Dynamie Variables from CreateVM.sh
+# Source the variables from CreateVM.sh
+myVM_REGION=<VM_REGION>
+myVM_HOSTNAME=<VM_HOSTNAME>
+myVM_RESOURCE_GROUP=<VM_RESOURCE_GROUP>
+myMYSQL_ADMIN_PASSWORD=<MYSQL_ADMIN_PASSWORD>
+myMY_GUACAMOLE_PASSWORD=<MY_GUACAMOLE_PASSWORD>
+myMySQLHOST=<MySQLHOST>
+myMySQLUSER=<MySQLUSER>
+myMySQLPSSS=<MySQLPSSS>
+myEMAIL_USER=<EMAIL_USER>
+myVAULT_NAME=<VAULT_NAME>
 
-# Update APT repository
-apt-get -y update
+# Set the hostname to the DNS name of the VM
+sudo hostnamectl set-hostname $myVM_HOST
 
-# Install Software
-apt-get -y install docker.io
-apt-get -y install apache2
-apt-get -y install php
-apt-get -y install php-mysql
-apt-get -y install mysql-client
-apt-get -y install nginx
-apt-get -y install privoxy
-#apt-get -y install sssd adcli realmd  samba-common
-#apt-get -y install sssd realmd adcli krb5-workstation samba-common
-apt-get -y install expect unzip nmap nfs-client rsync screen diffutils lsof 
-apt-get -y install tcpdump telnet netcat traceroute wget perl curl
-apt-get -y install net-tools
+# Update the package list and upgrade all installed packages
+sudo apt-get update -y
+sudo apt-get upgrade -y
 
-# Stop Apache
-service apache2 stop
+# Install necessary software
+sudo apt-get install -y nginx git curl unzip expect docker.io apache2 php php-mysql mysql-client mysql-server privoxy sssd adcli realmd samba-common krb5-workstation nmap nfs-client rsync screen diffutils lsof tcpdump telnet netcat traceroute wget perl net-tools mailutils lynis certbot python3-certbot-nginx python3-certbot-apache python3-certbot-postfix
+
+# Configure mailutils and postfix
+FQDN=$(hostname -d)
+sudo debconf-set-selections <<< "postfix postfix/mailname string $FQDN"
+sudo debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
+sudo apt-get install -y postfix
 
 # Install Azure CLI
 AZ_REPO=$(lsb_release -cs)
-echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" |
-    sudo tee /etc/apt/sources.list.d/azure-cli.list
-apt-get update
-apt-get install azure-cli
+echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+sudo apt-get update
+sudo apt-get install -y azure-cli
 
-# Define Web Hostname
-myHOST="axa.$VM_REGION.cloudapp.azure.com"
+# Install and configure Guacamole
+sudo docker run --name some-guacd -d guacamole/guacd
+sudo docker run --name some-guacamole --link some-guacd:guacd \
+    -e MYSQL_HOSTNAME=$myMySQLHOST \
+    -e MYSQL_DATABASE=guacamoledb  \
+    -e MYSQL_USER=$myMySQLUSER    \
+    -e MYSQL_PASSWORD=$myMySQLPASS \
+    -d -p 8080:8080 guacamole/guacamole
+sudo docker exec -it some-guacamole /opt/guacamole/bin/initdb.sh --mysql > initdb.sql
 
-# Assumption is that DBs are hosted on GearHost.com
-# That way I dont need Pay for a database service in Azure seperately.
-VM_REGION="westus3"
-VAULT_NAME="kv-aspl-$VM_REGION"
-EMAIL_USER='jacobc@aspl.net'
+# Configure nginx
+sudo tee /etc/nginx/sites-available/default <<EOF
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
 
-# Get hostname/username/password from Azure Key Vault
-myMySQLHOST=$(az keyvault secret show --vault-name $VAULT_NAME --name "guacamoledbhost" --query value -o tsv)
-myMySQLUSER=$(az keyvault secret show --vault-name $VAULT_NAME --name "guacamoledbuser" --query value -o tsv)
-myMySQLPASS=$(az keyvault secret show --vault-name $VAULT_NAME --name "guacamoledbpass" --query value -o tsv)
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
 
-# # Guacamole Install
-# docker run --name some-guacd -d guacamole/guacd
-# # Install Start Docker GUACAMOLE
-# docker run --name some-guacamole --link some-guacd:guacd \
-#     -e MYSQL_HOSTNAME=$myMySQLHOST \
-#     -e MYSQL_DATABASE=guacamoledb  \
-#     -e MYSQL_USER=$myMySQLUSER    \
-#     -e MYSQL_PASSWORD=$myMySQLPASS \
-#     -d -p 8080:8080 guacamole/guacamole
+    server_name _;
 
-# # Update the Guacamole Tomcat Configuration
-# mysql --host=$myMySQLHOST --user=$myMySQLUSER --password=$myMySQLPASS -e "intidb.sql"
+    location / {
+        proxy_pass http://localhost:8080/guacamole/;
+        proxy_buffering off;
+        proxy_http_version 1.1;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header Connection \$connection_upgrade;
+        proxy_set_header Connection \$http_connection;
+        access_log off;
+    }
+}  
+EOF
+sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+sudo systemctl enable nginx
+sudo systemctl start nginx
 
-# # GUACD Install
-# docker run --name some-guacd -d guacamole/guacd
-# docker run --name some-guacamole --link some-guacd:guacd \
-#     -e MYSQL_HOSTNAME=$myMySQLHOST \
-#     -e MYSQL_DATABASE=guacamoledb  \
-#     -e MYSQL_USER=$myMySQLUSER    \
-#     -e MYSQL_PASSWORD=$myMySQLPASS \
-#     -d -p 8080:8080 guacamole/guacamole
+# Install certificates for nginx, apache2, and postfix
+sudo certbot --nginx
+sudo certbot --apache
+sudo certbot --postfix
 
-# # Fix  Tomcat Configuration for guacamole
-# # Get username and password from Azure Key Vault
-# guacAdminUser=$(az keyvault secret show --vault-name $VAULT_NAME --name "guacadminuser" --query value -o tsv)
-# guacAdminPassword=$(az keyvault secret show --vault-name $VAULT_NAME --name "guacadminpass" --query value -o tsv)
-# docker exec -it some-guacamole bash -c "sed -i 's/<\/tomcat-users>/  <role rolename=\"guacamole-admin\"\/>\n  <user username=\"tomcat\" password=\"$guacAdminPassword\" roles=\"guacamole-admin\"\/>\n<\/tomcat-users>/' /usr/local/tomcat/conf/tomcat-users.xml"
+# Restart services
+sudo systemctl restart nginx
+sudo systemctl restart postfix
+sudo systemctl restart apache2
+sudo systemctl restart docker
 
-# # Restart Docker Guacamole and Guacd
-# docker update  --restart unless-stopped some-guacamole
-# docker update  --restart unless-stopped some-guacd
+# Run Lynis Security Scanner
+sudo lynis audit system -Q --no-colors | mail -s "PEN test for Host $VM_" $EMAIL_USER
 
-# Get Updated Index.htm from GitHub
-wget https://raw.githubusercontent.com/jchirayath/aws/master/s3/config/index.html
-cp index.html /var/www/html/index.html
+# Test mail
+echo "This is a test email" | mail -s "Test email" $EMAIL_USER
 
-# Get Updated nginx Config from GitHub
-#wget https://raw.githubusercontent.com/jchirayath/aws/master/s3/config/nginx.conf
-#cp nginx.conf /etc/nginx/nginx.conf
+# Test the Guacamole installation
+curl http://localhost:8080/guacamole/
 
-# Get Updated nginx Index.htm from GitHub
-wget https://raw.githubusercontent.com/jchirayath/aws/master/s3/config/usr-share-nginx-html-index.html 
-cp usr-share-nginx-html-index.html /usr/share/nginx/html/index.html
+# Test configurations and services
+sudo nginx -t
+sudo postfix check
+sudo apache2ctl configtest
+sudo systemctl status docker
+sudo lynis audit system -Q --no-colors
 
-# Install and configure Mail
-apt-get -y install postfix mailutils
+# Configure Privoxy
+listen-address 127.0.0.1:8118
+listen-address
+forward-socks5 / localhost:1080 .
+EOF
+sudo systemctl restart privoxy
+sudo systemctl status privoxy
+# Test Privoxy
+curl -x http://localhost:8118 http://example.com
 
-# Configure Postfix
-debconf-set-selections <<< "postfix postfix/mailname string $myHOST"
-debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
-dpkg-reconfigure -f noninteractive postfix
+# Configure MySQL Server
+sudo mysql_secure_installation
+sudo mysql -u root -p
 
-# Start Postfix service
-systemctl start postfix
-systemctl enable postfix
 
-# Install and run Lynis Security Scanner
-apt-get -y install lynis
-lynis audit system -Q --no-colors | mail -s "PEN test for Host $myHOST" $EMAIL_USER
-#git clone https://github.com/CISOfy/lynis
+# Test Tomcat
+sudo docker exec -it some-guacamole bash -c "cat /usr/local/tomcat/conf/tomcat-users.xml"
+# Fix guacamole Tomcat configuration have a default index.html
+sudo docker exec -it some-guacamole bash -c "echo '<html><body><h1>Guacamole</h1></body></html>' > /usr/local/tomcat/webapps/guacamole/index.html"
+# Fix Tomcat server root configuration to have a default index.html
+sudo docker exec -it some-guacamole bash -c "mkdir -p /usr/local/tomcat/webapps/ROOT && echo '<html><body><h1>Tomcat Server</h1></body></html>' > /usr/local/tomcat/webapps/ROOT/index.html"
 
-# Install Certificate for Server
-apt install python3-certbot-apache
-apt install python3-certbot-nginx
-certbot --apache -d $myHOST --non-interactive --agree-tos -m $EMAIL_USER
-certbot --nginx -d $myHOST --non-interactive --agree-tos -m $EMAIL_USER
-
-# Install mysqldaemon
-apt-get -y install mysql-server
-systemctl start mysql
-systemctl enable mysql
-
-# Enable default access policies for mysqldaemon
-MYSQL_ADMIN_PASSWORD=$(az keyvault secret show --vault-name $VAULT_NAME --name "mysqladminpass" --query value -o tsv)
-mysql -e "CREATE USER 'admin'@'%' IDENTIFIED BY '$MYSQL_ADMIN_PASSWORD';"
-mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'admin'@'%' WITH GRANT OPTION;"
-mysql -e "FLUSH PRIVILEGES;"
-
-# install cloudpanel
-curl -sSL https://installer.cloudpanel.io/ce/v2/install.sh | sudo bash
+# Print completion message
+echo "VM update and software installation complete."
