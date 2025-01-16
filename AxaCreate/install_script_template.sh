@@ -59,7 +59,9 @@ sudo apt-get install -y azure-cli
 ## Configure mailutils and postfix
 echo "Configuring mailutils and postfix"
 FQDN=$(hostname -d)
-sudo debconf-set-selections <<< "postfix postfix/mailname string $FQDN"
+postconf -e "myhostname = $myHOST"
+postconf -e "mydestination = $myHOST, localhost.localdomain, localhost"
+# sudo debconf-set-selections <<< "postfix postfix/mailname string $FQDN"
 sudo debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
 sudo apt-get install -y postfix
 echo "Testing mail configuration"
