@@ -145,16 +145,16 @@ chmod +x $VM_INSTALL_SCRIPT
 
 # Update the install_script.sh with variables from CreateVM.sh
 echo "## Updating the install script with variables"
-sed -i '' "s|<VM_REGION>|$myVM_REGION|g" $VM_INSTALL_SCRIPT
-sed -i '' "s|<VM_HOSTNAME>|$myVM_HOSTNAME|g" $VM_INSTALL_SCRIPT
-sed -i '' "s|<VM_RESOURCE_GROUP>|$myVM_RESOURCE_GROUP|g" $VM_INSTALL_SCRIPT
-sed -i '' "s|<MY_GUACAMOLE_PASSWORD>|$myMY_GUACAMOLE_PASSWORD|g" $VM_INSTALL_SCRIPT
-sed -i '' "s|<MYSQL_ADMIN_PASSWORD>|$myMYSQL_ADMIN_PASSWORD|g" $VM_INSTALL_SCRIPT
+sed -i '' "s|<VM_REGION>|$VM_REGION|g" $VM_INSTALL_SCRIPT
+sed -i '' "s|<VM_HOSTNAME>|$VM_HOSTNAME|g" $VM_INSTALL_SCRIPT
+sed -i '' "s|<VM_RESOURCE_GROUP>|$VM_RESOURCE_GROUP|g" $VM_INSTALL_SCRIPT
+#
+sed -i '' "s|<MYSQL_ADMIN_PASSWORD>|$MYSQL_ADMIN_PASSWORD|g" $VM_INSTALL_SCRIPT
 sed -i '' "s|<MySQLHOST>|$myMySQLHOST|g" $VM_INSTALL_SCRIPT
 sed -i '' "s|<MySQLUSER>|$myMySQLUSER|g" $VM_INSTALL_SCRIPT
 sed -i '' "s|<MySQLPASS>|$myMySQLPASS|g" $VM_INSTALL_SCRIPT
-sed -i '' "s|<EMAIL_USER>|$myEMAIL_USER|g" $VM_INSTALL_SCRIPT
-sed -i '' "s|<VAULT_NAME>|$myVAULT_NAME|g" $VM_INSTALL_SCRIPT
+sed -i '' "s|<EMAIL_USER>|$EMAIL_USER|g" $VM_INSTALL_SCRIPT
+sed -i '' "s|<VAULT_NAME>|$VAULT_NAME|g" $VM_INSTALL_SCRIPT
 
 # Add a custom script extension to the VM to run an install script
 # echo "Adding a custom script extension to the VM"
