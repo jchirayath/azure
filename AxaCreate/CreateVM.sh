@@ -3,8 +3,8 @@
 set -e
 
 # Commit Code to GitHub
-git commit -a -m "Creating AXA"
-git push
+# git commit -a -m "Creating AXA"
+# git push
 
 # Check Account and Set Subscription
 az account show
@@ -24,18 +24,14 @@ VM_INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/jchirayath/azure/refs/h
 KEY_VAULT_ADMINS='AAD DC Administrators'
 
 # Get password from environment variable for Guacamole DB
-if [ -z "$MY_PASSWORD" ]; then
-    echo "Error: MY_PASSWORD environment variable is not set."
-    read -sp 'Enter password for Guacamole DB: ' MY_PASSWORD
-    echo
+if [ -z "$MY_GUACAMOLE_PASSWORD" ]; then
+    echo "Error: MY_GUACAMOLE_PASSWORD environment variable is not set."
     exit 1
 fi
 
 # Get password from environment variable for MYSQL_ADMIN_PASSWORD
 if [ -z "$MYSQL_ADMIN_PASSWORD" ]; then
     echo "Error: MYSQL_ADMIN_PASSWORD environment variable is not set."
-    read -sp 'Enter MySQL admin password: ' MYSQL_ADMIN_PASSWORD
-    echo
     exit 1
 fi
 
@@ -97,13 +93,22 @@ fi
 ADMIN_GROUP_ID=$(az ad group show --group "$KEY_VAULT_ADMINS" --query id -o tsv)
 az role assignment create --role "Key Vault Administrator" --assignee $ADMIN_GROUP_ID --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$VM_RESOURCE_GROUP-$VM_REGION/providers/Microsoft.KeyVault/vaults/$VAULT_NAME
 
+# Key Vault Allow public access from specific virtual networks of VM
+# Get the VM's subnet ID
+VM_NIC_ID=$(az vm show --resource-group $VM_RESOURCE_GROUP-$VM_REGION --name $VM_HOSTNAME --query "networkProfile.networkInterfaces[0].id" -o tsv)
+VM_SUBNET_ID=$(az network nic show --ids $VM_NIC_ID --query "ipConfigurations[0].subnet.id" -o tsv)
+# Get the VM's virtual network ID
+VM_VNET_ID=$(az network vnet show --ids $VM_SUBNET_ID --query "id" -o tsv)
+# Allow the VM's virtual network to access the Key Vault
+az keyvault network-rule add --name $VAULT_NAME --resource-group $VM_RESOURCE_GROUP-$VM_REGION --subnet $VM_SUBNET_ID
+
 # wait for the role assignment to propagate
 sleep 15
 
 # # Create Secret in Azure Key Vault for Guacamole
 myMyuSQLHOST="den1.mysql6.gear.host"
 myUser="guacamoledb"
-myPassword=$MY_PASSWORD
+myPassword=$MY_GUACAMOLE_PASSWORD
 az keyvault secret set --vault-name $VAULT_NAME --name "guacamoledbhost" --value $myMyuSQLHOST
 az keyvault secret set --vault-name $VAULT_NAME --name "guacamoledbuser" --value $myUser
 az keyvault secret set --vault-name $VAULT_NAME --name "guacamoledbpass" --value $myPassword
@@ -115,6 +120,19 @@ az keyvault secret set --vault-name $VAULT_NAME --name "mysql-admin-password" --
 az vm identity assign --resource-group $VM_RESOURCE_GROUP-$VM_REGION --name $VM_HOSTNAME
 VM_IDENTITY=$(az vm show --resource-group $VM_RESOURCE_GROUP-$VM_REGION --name $VM_HOSTNAME --query identity.principalId -o tsv)
 az role assignment create --role "Key Vault Reader" --assignee $VM_IDENTITY --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$VM_RESOURCE_GROUP-$VM_REGION/providers/Microsoft.KeyVault/vaults/$VAULT_NAME
+
+# download the install script to the local directory
+wget $VM_INSTALL_SCRIPT_URL
+
+Update the install_script.sh with Variables from CreateVM.sh
+# Update the install_script.sh with variables from CreateVM.sh
+sed -i "s|<VM_HOSTNAME>|$VM_HOSTNAME|g" $VM_INSTALL_SCRIPT
+sed -i "s|<VM_REGION>|$VM_REGION|g" $VM_INSTALL_SCRIPT
+sed -i "s|<VM_SIZE>|$VM_SIZE|g" $VM_INSTALL_SCRIPT
+sed -i "s|<VM_OS>|$VM_OS|g" $VM_INSTALL_SCRIPT
+sed -i "s|<VM_DISK_SIZE>|$VM_DISK_SIZE|g" $VM_INSTALL_SCRIPT
+sed -i "s|<MY_GUACAMOLE_PASSWORD>|$MY_GUACAMOLE_PASSWORD|g" $VM_INSTALL_SCRIPT
+sed -i "s|<MYSQL_ADMIN_PASSWORD>|$MYSQL_ADMIN_PASSWORD|g" $VM_INSTALL_SCRIPT
 
 # # Add a custom script extension to the VM to run an install script
 # az vm extension set \
