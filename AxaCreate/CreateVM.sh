@@ -157,10 +157,10 @@ sed -i '' "s|<EMAIL_USER>|$EMAIL_USER|g" $VM_INSTALL_SCRIPT
 sed -i '' "s|<VAULT_NAME>|$VAULT_NAME|g" $VM_INSTALL_SCRIPT
 
 # Add a custom script extension to the VM to run an install script
-# echo "Adding a custom script extension to the VM"
-# az vm extension set \
-#     --resource-group $VM_RESOURCE_GROUP-$VM_REGION \
-#     --vm-name $VM_HOSTNAME \
-#     --name customScript \
-#     --publisher Microsoft.Azure.Extensions \
-#     --settings "{\"fileUris\": [\"$VM_INSTALL_SCRIPT_URL\"], \"commandToExecute\": \"./$VM_INSTALL_SCRIPT\"}"
+echo "Adding a custom script extension to the VM"
+az vm extension set \
+    --resource-group $VM_RESOURCE_GROUP-$VM_REGION \
+    --vm-name $VM_HOSTNAME \
+    --name customScript \
+    --publisher Microsoft.Azure.Extensions \
+    --settings "{\"fileUris\": [\"$(pwd)/$VM_INSTALL_SCRIPT\"], \"commandToExecute\": \"./$VM_INSTALL_SCRIPT\"}"

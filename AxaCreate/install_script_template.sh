@@ -13,34 +13,42 @@ myMySQLPASS='<MySQLPASS>'
 myEMAIL_USER='<EMAIL_USER>'
 myVAULT_NAME="<VAULT_NAME>"
 
-# Set the hostname to the DNS name of the VM
+## Set the hostname to the DNS name of the VM
+echo "Setting hostname to $myVM_HOST"
 sudo hostnamectl set-hostname $myVM_HOST
 
-# Update the package list and upgrade all installed packages
+## Update the package list and upgrade all installed packages
+echo "Updating package list and upgrading installed packages"
 sudo apt-get update -y
 sudo apt-get upgrade -y
 
-# Install necessary software
+## Install necessary software
+echo "Installing necessary software"
 sudo apt-get install -y nginx git curl unzip expect docker.io apache2 php php-mysql mysql-client mysql-server privoxy sssd adcli realmd samba-common krb5-workstation nmap nfs-client rsync screen diffutils lsof tcpdump telnet netcat traceroute wget perl net-tools mailutils lynis certbot python3-certbot-nginx python3-certbot-apache python3-certbot-postfix
 
-# Take a local OS ubuntu snapshot
+## Take a local OS ubuntu snapshot
+echo "Installing timeshift and taking initial setup snapshot"
 sudo apt-get install -y timeshift
-# Take a snapshot of the OS with timeshift
 sudo timeshift --create --comments "Initial setup snapshot" --tags INITIAL_SETUP
 
-# Configure mailutils and postfix
-FQDN=$(hostname -d)
-sudo debconf-set-selections <<< "postfix postfix/mailname string $FQDN"
-sudo debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
-sudo apt-get install -y postfix
-
-# Install Azure CLI
+## Install Azure CLI
+echo "Installing Azure CLI"
 AZ_REPO=$(lsb_release -cs)
 echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
 sudo apt-get update
 sudo apt-get install -y azure-cli
 
-# Install and configure Guacamole
+## Configure mailutils and postfix
+echo "Configuring mailutils and postfix"
+FQDN=$(hostname -d)
+sudo debconf-set-selections <<< "postfix postfix/mailname string $FQDN"
+sudo debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
+sudo apt-get install -y postfix
+echo "Testing mail configuration"
+echo "This is a test email" | mail -s "Test email" $myEMAIL_USER
+
+## Install and configure Guacamole
+echo "Installing and configuring Guacamole"
 sudo docker run --name some-guacd -d guacamole/guacd
 sudo docker run --name some-guacamole --link some-guacd:guacd \
     -e MYSQL_HOSTNAME=$myMySQLHOST \
@@ -48,9 +56,33 @@ sudo docker run --name some-guacamole --link some-guacd:guacd \
     -e MYSQL_USER=$myMySQLUSER    \
     -e MYSQL_PASSWORD=$myMySQLPASS \
     -d -p 8080:8080 guacamole/guacamole
-sudo docker exec -it some-guacamole /opt/guacamole/bin/initdb.sh --mysql > initdb.sql
 
-# Configure nginx
+## Dump the guacamole database for initialization
+echo "Dumping the guacamole database for initialization"
+sudo docker exec -it some-guacamole /opt/guacamole/bin/initdb.sh --mysql > initdb.sql
+echo "Testing connection to the guacamole database"
+sudo docker exec -it some-guacamole bash -c "mysql -h $myMySQLHOST -u $myMySQLUSER -p$myMySQLPASS guacamoledb"
+echo "Testing connection to guacamole server"
+curl http://localhost:8080/guacamole/
+
+## Configure MySQL Server
+echo "Configuring MySQL Server"
+sudo mysql_secure_installation <<EOF
+
+Y
+$myMYSQL_ADMIN_PASSWORD
+$myMYSQL_ADMIN_PASSWORD
+Y
+Y
+Y
+Y
+EOF
+## Test MySQL
+echo "Testing MySQL"
+sudo mysql -u root -p$myMYSQL_ADMIN_PASSWORD
+
+## Configure nginx
+echo "Configuring nginx"
 sudo tee /etc/nginx/sites-available/default <<EOF
 server {
     listen 80 default_server;
@@ -72,60 +104,60 @@ server {
     }
 }  
 EOF
+
+## Enable the nginx configuration
+echo "Enabling nginx configuration"
 sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 sudo systemctl enable nginx
 sudo systemctl start nginx
 
-# Install certificates for nginx, apache2, and postfix
+## Install certificates for nginx, apache2, and postfix
+echo "Installing certificates for nginx, apache2, and postfix"
 sudo certbot --nginx
 sudo certbot --apache
 sudo certbot --postfix
 
-# Restart services
+## Restart services
+echo "Restarting services"
+#
+echo "Restarting nginx"
 sudo systemctl restart nginx
+#
+echo "Restarting postfix"
 sudo systemctl restart postfix
+#
+echo "Restarting apache2"
 sudo systemctl restart apache2
+#
+echo "Restarting docker"
 sudo systemctl restart docker
 
-# Run Lynis Security Scanner
-sudo lynis audit system -Q --no-colors | mail -s "PEN test for Host $VM_" $EMAIL_USER
+## Configure Privoxy
+echo "Configuring Privoxy"
+sudo tee /etc/privoxy/config <<EOF
+listen-address 127.0.0.1:8118
+forward-socks5 / localhost:1080 .
+EOF
+sudo systemctl restart privoxy
+sudo systemctl status privoxy
 
-# Test mail
-echo "This is a test email" | mail -s "Test email" $EMAIL_USER
+## Run Lynis Security Scanner
+echo "Running Lynis Security Scanner"
+sudo lynis audit system -Q --no-colors | mail -s "PEN test for Host $myVM_HOST" $myEMAIL_USER
 
-# Test the Guacamole installation
-curl http://localhost:8080/guacamole/
-
-# Test configurations and services
+## Test configurations and services
+echo "Testing configurations and services"
 sudo nginx -t
 sudo postfix check
 sudo apache2ctl configtest
 sudo systemctl status docker
 sudo lynis audit system -Q --no-colors
 
-# Configure Privoxy
-listen-address 127.0.0.1:8118
-listen-address
-forward-socks5 / localhost:1080 .
-EOF
-sudo systemctl restart privoxy
-sudo systemctl status privoxy
-# Test Privoxy
+## Test Privoxy
+echo "Testing Privoxy"
 curl -x http://localhost:8118 http://example.com
 
-# Configure MySQL Server
-sudo mysql_secure_installation
-sudo mysql -u root -p
-
-
-# Test Tomcat
-sudo docker exec -it some-guacamole bash -c "cat /usr/local/tomcat/conf/tomcat-users.xml"
-# Fix guacamole Tomcat configuration have a default index.html
-sudo docker exec -it some-guacamole bash -c "echo '<html><body><h1>Guacamole</h1></body></html>' > /usr/local/tomcat/webapps/guacamole/index.html"
-# Fix Tomcat server root configuration to have a default index.html
-sudo docker exec -it some-guacamole bash -c "mkdir -p /usr/local/tomcat/webapps/ROOT && echo '<html><body><h1>Tomcat Server</h1></body></html>' > /usr/local/tomcat/webapps/ROOT/index.html"
-
-# Print completion message
+## Print completion message
 echo "VM update and software installation complete."
