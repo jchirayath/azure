@@ -19,7 +19,7 @@ VM_SIZE="Standard_D2s_v3"
 VM_AZURE_KEY="azure_id"
 VM_DISK_SIZE="50"
 VM_INSTALL_SCRIPT="install_script.sh"
-VM_INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/jchirayath/azure/refs/heads/master/AxaCreate/$VM_INSTALL_SCRIPT"
+VM_INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/jchirayath/azure/refs/heads/master/AxaCreate/install_script_template.sh"
 # KEY Vault Admins
 KEY_VAULT_ADMINS='AAD DC Administrators'
 
@@ -122,7 +122,9 @@ VM_IDENTITY=$(az vm show --resource-group $VM_RESOURCE_GROUP-$VM_REGION --name $
 az role assignment create --role "Key Vault Reader" --assignee $VM_IDENTITY --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$VM_RESOURCE_GROUP-$VM_REGION/providers/Microsoft.KeyVault/vaults/$VAULT_NAME
 
 # download the install script to the local directory
-wget $VM_INSTALL_SCRIPT_URL
+# Create a new file from wget and make it executable
+wget -O $VM_INSTALL_SCRIPT $VM_INSTALL_SCRIPT_URL
+chmod +x $VM_INSTALL_SCRIPT
 
 Update the install_script.sh with Variables from CreateVM.sh
 # Update the install_script.sh with variables from CreateVM.sh
