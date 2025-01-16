@@ -9,7 +9,7 @@ myMYSQL_ADMIN_PASSWORD=<MYSQL_ADMIN_PASSWORD>
 myMY_GUACAMOLE_PASSWORD=<MY_GUACAMOLE_PASSWORD>
 myMySQLHOST=<MySQLHOST>
 myMySQLUSER=<MySQLUSER>
-myMySQLPSSS=<MySQLPSSS>
+myMySQLPASS=<MySQLPASS>
 myEMAIL_USER=<EMAIL_USER>
 myVAULT_NAME=<VAULT_NAME>
 
@@ -22,6 +22,11 @@ sudo apt-get upgrade -y
 
 # Install necessary software
 sudo apt-get install -y nginx git curl unzip expect docker.io apache2 php php-mysql mysql-client mysql-server privoxy sssd adcli realmd samba-common krb5-workstation nmap nfs-client rsync screen diffutils lsof tcpdump telnet netcat traceroute wget perl net-tools mailutils lynis certbot python3-certbot-nginx python3-certbot-apache python3-certbot-postfix
+
+# Take a local OS ubuntu snapshot
+sudo apt-get install -y timeshift
+# Take a snapshot of the OS with timeshift
+sudo timeshift --create --comments "Initial setup snapshot" --tags INITIAL_SETUP
 
 # Configure mailutils and postfix
 FQDN=$(hostname -d)
