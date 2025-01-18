@@ -84,8 +84,7 @@ if ! az vm show --resource-group $VM_RESOURCE_GROUP-$VM_REGION --name $VM_HOSTNA
         --os-disk-name ${VM_HOSTNAME}-osdisk \
         --os-disk-size-gb $VM_DISK_SIZE \
         --vnet-name ${VM_HOSTNAME}-vnet \
-        --ssh-key-value ~/.ssh/$VM_AZURE_KEY.pub \
-        --role contributor --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$VM_RESOURCE_GROUP-$VM_REGION
+        --ssh-key-value ~/.ssh/$VM_AZURE_KEY.pub
 else
     echo "## VM $VM_HOSTNAME already exists."
 fi
@@ -138,7 +137,7 @@ az vm identity assign --resource-group $VM_RESOURCE_GROUP-$VM_REGION --name $VM_
 VM_IDENTITY=$(az vm show --resource-group $VM_RESOURCE_GROUP-$VM_REGION --name $VM_HOSTNAME --query identity.principalId -o tsv)
 az role assignment create --role "Key Vault Reader" --assignee $VM_IDENTITY --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$VM_RESOURCE_GROUP-$VM_REGION/providers/Microsoft.KeyVault/vaults/$VAULT_NAME
 
-# download the install script to the local directory
+# download the install script to the local direct   ory
 echo "## Downloading the install script"
 wget -O $VM_INSTALL_SCRIPT $VM_INSTALL_SCRIPT_URL
 chmod +x $VM_INSTALL_SCRIPT
@@ -157,10 +156,10 @@ sed -i '' "s|<EMAIL_USER>|$EMAIL_USER|g" $VM_INSTALL_SCRIPT
 sed -i '' "s|<VAULT_NAME>|$VAULT_NAME|g" $VM_INSTALL_SCRIPT
 
 # Add a custom script extension to the VM to run an install script
-echo "Adding a custom script extension to the VM"
-az vm extension set \
-    --resource-group $VM_RESOURCE_GROUP-$VM_REGION \
-    --vm-name $VM_HOSTNAME \
-    --name customScript \
-    --publisher Microsoft.Azure.Extensions \
-    --settings "{\"fileUris\": [\"$(pwd)/$VM_INSTALL_SCRIPT\"], \"commandToExecute\": \"./$VM_INSTALL_SCRIPT\"}"
+# echo "Adding a custom script extension to the VM"
+# az vm extension set \
+#     --resource-group $VM_RESOURCE_GROUP-$VM_REGION \
+#     --vm-name $VM_HOSTNAME \
+#     --name customScript \
+#     --publisher Microsoft.Azure.Extensions \
+#     --settings "{\"fileUris\": [\"https://raw.githubusercontent.com/jchirayath/azure/refs/heads/master/AxaCreate/install_script_template.sh\"], \"commandToExecute\": \"./install_script_template.sh\"}"
