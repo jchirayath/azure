@@ -1,0 +1,31 @@
+# Description: Variables for the CreateAxa Script
+AZURE_SUBSCRIPTION="JacobAzure"
+VM_RESOURCE_GROUP="rg-axa"
+SUBNET_ADDRESS_PREFIX="10.0.0.0/24"
+EMAIL_USER='jacobc@aspl.net'
+VM_REGION="westus3"
+VM_HOSTNAME="axa"
+VM_OS="Ubuntu2204"
+VM_SIZE="Standard_D2s_v3"
+VM_AZURE_KEY="azure_id"
+VM_DISK_SIZE="50"
+KEYVAULT_NAME="kv-axa-$VM_REGION"
+# Description: Variables for the Guacamole DB
+PASSWORD_LENGTH=16
+GUAC_SQL_HOST="den1.mysql6.gear.host"
+GUAC_SQL_USER="guacamoledb"
+# Description: Variables for the CreateAxa Script
+SCRIPT_SETUPHOST="1-SetUpHost.sh"
+SCRIPT_UPDATE_PKGS="2-Udpate_Pkgs.sh"
+SCRIPT_AZURE_CLI="3-Azure_CLI.sh"
+SCRIPT_MAIL_SETUP="4-Mail_Setup.sh"
+SCRIPT_GUAC_INSTALL="5-Guac_Install.sh"
+SCRIPT_NGINX_INSTALL="6-Nginx_Install.sh"
+SCRIPT_PRIVOXY_INSTALL="7-Privoxy_Install.sh"
+SCRIPT_MYSQL_INSTALL="8-MySQL_Install.sh"
+SCRIPT_FAIL2BAN_INSTALL="9-Fail2Ban_Install.sh"
+SCRIPT_FIREWALL_INSTALL="10-Firewall_Install.sh"
+SCRIPT_CERTBOT_INSTALL="11-Certbot_Install.sh"
+SCRIPT_LYNIS_INSTALL="12-Lynis_Install.sh"
+SCRIPT_TAKEBACKUP="13-TakeBackup.sh"
+SCRIPT_VAULT_PASSWORDS="14-Vault_Passwords.sh"
