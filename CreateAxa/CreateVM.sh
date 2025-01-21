@@ -74,6 +74,7 @@ if ! az vm show --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME &>/dev/n
         --os-disk-name ${VM_HOSTNAME}-osdisk \
         --os-disk-size-gb $VM_DISK_SIZE \
         --ssh-key-value ~/.ssh/$VM_AZURE_KEY.pub
+        --CustomScriptExtension '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Update_Host.sh"],"commandToExecute":"./Update_Host.sh"}'
 else
     echo "## VM $VM_HOSTNAME already exists."
 fi
@@ -157,7 +158,7 @@ if [ $SCRIPT_SETUPHOST = "TRUE" ]; then
         --vm-name $VM_HOSTNAME \
         --name CustomScript \
         --publisher Microsoft.Azure.Extensions \
-        --settings '{"fileUris":["https://raw.githubusercontent.com/jacobc2020/azure-quickstart-templates/master/CreateAxa/scripts/SetUpHost.sh"],"commandToExecute":"./SetUpHost.sh"}'
+        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/SetUpHost.sh"],"commandToExecute":"./SetUpHost.sh"}'
 
     echo "## Waiting for SetUpHost.sh to complete"
     sleep 60
