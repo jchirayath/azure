@@ -7,6 +7,7 @@ set -e
 # git commit -a -m "Creating AXA"
 # git push
 # Import Variables from the variables file
+echo "## Importing variables from the variables file"
 source ./variables.sh
 
 # Check Account and Set Subscription
@@ -25,6 +26,7 @@ fi
 # Create azure resource group called if it does not exist
 echo "## Creating Azure resource group"
 az group create --name $VM_RESOURCE_GROUP --location $VM_REGION
+echo "## Resource group $VM_RESOURCE_GROUP created"
 
 # Create azure DNS Name if it does not exist
 # Check if the DNS name exists
@@ -93,6 +95,15 @@ if ! az keyvault show --name $KEYVAULT_NAME --resource-group $VM_RESOURCE_GROUP 
     echo "## Creating a Key Vault"
     az keyvault create --name $KEYVAULT_NAME --resource-group $VM_RESOURCE_GROUP --location $VM_REGION
 
+    # Allow Azure admins to add secrets
+    echo "## Allowing Azure admins to add secrets"
+    ADMIN_GROUP_ID=$(az ad group show --group "$KEY_VAULT_ADMINS" --query id -o tsv)
+    az role assignment create --role "Key Vault Administrator" --assignee $ADMIN_GROUP_ID --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$VM_RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/$KEYVAULT_NAME
+
+    # wait for the role assignment to propagate
+    echo "## Waiting for role assignment to propagate"
+    sleep 15
+
     # Generate and store passwords in Key Vault
     echo "## Generating and storing passwords in Key Vault"
     NGINX_PASSWORD=$(openssl rand -base64 $PASSWORD_LENGTH)
@@ -111,21 +122,48 @@ fi
 
 # Check if the managed identity for the VM exists
 echo "## Checking if managed identity for the VM exists"
-if ! az identity show --name myIdentity --resource-group $VM_RESOURCE_GROUP &>/dev/null; then
+if ! az identity show --name $VM_HOSTNAME-Identity --resource-group $VM_RESOURCE_GROUP &>/dev/null; then
     echo "## Creating a managed identity for the VM"
-    az identity create --name myIdentity --resource-group $VM_RESOURCE_GROUP
+    az identity create --name $VM_HOSTNAME-Identity --resource-group $VM_RESOURCE_GROUP
 
     echo "## Assigning the managed identity to the VM"
-    IDENTITY_ID=$(az identity show --name myIdentity --resource-group $VM_RESOURCE_GROUP --query 'id' -o tsv)
+    IDENTITY_ID=$(az identity show --name $VM_HOSTNAME-Identity --resource-group $VM_RESOURCE_GROUP --query 'id' -o tsv)
     az vm identity assign --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --identities $IDENTITY_ID
 
     echo "## Setting Key Vault policy to allow the VM to access secrets"
     VM_PRINCIPAL_ID=$(az vm show --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --query 'identity.principalId' -o tsv)
     az role assignment create --role "Key Vault Secrets User" --assignee $VM_PRINCIPAL_ID --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$VM_RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/$KEYVAULT_NAME
-    IDENTITY_OBJECT_ID=$(az identity show --name myIdentity --resource-group $VM_RESOURCE_GROUP --query 'principalId' -o tsv)
+    IDENTITY_OBJECT_ID=$(az identity show --name $VM_HOSTNAME-Identity --resource-group $VM_RESOURCE_GROUP --query 'principalId' -o tsv)
     az role assignment create --role "Key Vault Secrets User" --assignee-object-id $IDENTITY_OBJECT_ID --assignee-principal-type ServicePrincipal --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$VM_RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/$KEYVAULT_NAME
 else
     echo "## Managed identity for the VM already exists."
+fi
+
+# Install VM extension AADLoginForLinux
+echo "## Installing VM extension AADLoginForLinux"
+az vm extension set \
+    --resource-group ${VM_RESOURCE_GROUP} \
+    --vm-name $VM_HOSTNAME \
+    --name AADSSHLoginForLinux \
+    --publisher Microsoft.Azure.ActiveDirectory \
+    --settings '{}'
+echo "## VM extension AADLoginForLinux installed"
+
+#cho "## Installing scripts on the VM"
+if [ $SCRIPT_SETUPHOST = "TRUE" ]; then
+    echo "## Installing SetUpHost.sh"
+    az vm extension set \
+        --resource-group ${VM_RESOURCE_GROUP} \
+        --vm-name $VM_HOSTNAME \
+        --name CustomScript \
+        --publisher Microsoft.Azure.Extensions \
+        --settings '{"fileUris":["https://raw.githubusercontent.com/jacobc2020/azure-quickstart-templates/master/CreateAxa/scripts/SetUpHost.sh"],"commandToExecute":"./SetUpHost.sh"}'
+
+    echo "## Waiting for SetUpHost.sh to complete"
+    sleep 60
+    echo "## SetUpHost.sh completed"
+else
+    echo "## Skipping SetUpHost.sh"
 fi
 
 # Display all the resources created
@@ -144,7 +182,7 @@ echo "## - mysqlAdminPassword"
 echo "## - guacamoleHost"
 echo "## - guacamoleUser"
 echo "## - guacamolePassword"
-echo "## Managed Identity: myIdentity"
+echo "## Managed Identity: $VM_HOSTNAME-Identity"
 echo "## Identity ID: $IDENTITY_ID"
 echo "## Identity Object ID: $IDENTITY_OBJECT_ID"
 
