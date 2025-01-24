@@ -86,10 +86,39 @@ else
     echo "## VM $VM_HOSTNAME already exists."
 fi
 
+# Run the CustomScript extension to update the VM if VM was created
+if [ $? -eq 0 ]; then
+    echo "## Adding CustomScript extension to the VM"
+    az vm extension set \
+        --resource-group $VM_RESOURCE_GROUP \
+        --vm-name $VM_HOSTNAME \
+        --name CustomScript \
+        --publisher Microsoft.Azure.Extensions \
+        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Update_Host.sh"],"commandToExecute":"./Update_Host.sh"}'
+else
+    echo "## VM creatiob of $VM_HOSTNAME failed. Skipping CustomScript extension."
+    exit 1
+fi
+
 # Proceed only if the VM and CustomScript extension are completed
 echo "## Waiting for the VM and CustomScript extension to complete"
 az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
 az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --updated
+
+# Install VM extension AADLoginForLinux
+echo "## Installing VM extension AADLoginForLinux"
+az vm extension set \
+    --resource-group ${VM_RESOURCE_GROUP} \
+    --vm-name $VM_HOSTNAME \
+    --name AADSSHLoginForLinux \
+    --publisher Microsoft.Azure.ActiveDirectory \
+    --settings '{}'
+echo "## VM extension AADLoginForLinux installed"
+
+# Proceed only if the VM and AADLoginForLinux extension are completed
+echo "## Waiting for the VM and AADLoginForLinux extension to complete"
+az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
+az vm extension wait --resource-group $VM_RESOURCE_GROUP --vm-name $VM_HOSTNAME --name AADSSHLoginForLinux --created
 
 # Get the public IP address of the VM
 echo "## Getting the public IP address of the VM"
@@ -148,24 +177,12 @@ if ! az identity show --name $VM_HOSTNAME-Identity --resource-group $VM_RESOURCE
     az role assignment create --role "Key Vault Secrets User" --assignee $VM_PRINCIPAL_ID --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$VM_RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/$KEYVAULT_NAME
     IDENTITY_OBJECT_ID=$(az identity show --name $VM_HOSTNAME-Identity --resource-group $VM_RESOURCE_GROUP --query 'principalId' -o tsv)
     az role assignment create --role "Key Vault Secrets User" --assignee-object-id $IDENTITY_OBJECT_ID --assignee-principal-type ServicePrincipal --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$VM_RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/$KEYVAULT_NAME
+    
+    echo "## Allow the VM to acccess azure configure commands via the machine identity"
+    az role assignment create --role "Virtual Machine Contributor" --assignee $VM_PRINCIPAL_ID --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$VM_RESOURCE_GROUP/providers/Microsoft.Compute/virtualMachines/$VM_HOSTNAME
 else
     echo "## Managed identity for the VM already exists."
 fi
-
-# Install VM extension AADLoginForLinux
-echo "## Installing VM extension AADLoginForLinux"
-az vm extension set \
-    --resource-group ${VM_RESOURCE_GROUP} \
-    --vm-name $VM_HOSTNAME \
-    --name AADSSHLoginForLinux \
-    --publisher Microsoft.Azure.ActiveDirectory \
-    --settings '{}'
-echo "## VM extension AADLoginForLinux installed"
-
-# Proceed only if the VM and AADLoginForLinux extension are completed
-echo "## Waiting for the VM and AADLoginForLinux extension to complete"
-az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
-az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --extension AADSSHLoginForLinux --provisioningState "Succeeded"
 
 #cho "## Installing scripts on the VM"
 if [ $SCRIPT_SETUPHOST = "TRUE" ]; then
@@ -179,7 +196,7 @@ if [ $SCRIPT_SETUPHOST = "TRUE" ]; then
 
     echo "## Waiting for SetUpHost.sh to complete"
     az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
-    az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --extension CustomScript --provisioningState "Succeeded"
+    az vm extension wait --resource-group $VM_RESOURCE_GROUP --vm-name $VM_HOSTNAME --name CustomScript --created
     echo "## SetUpHost.sh completed"
 else
     echo "## Skipping SetUpHost.sh"
