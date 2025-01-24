@@ -2,19 +2,19 @@
 
 # Log in to Azure with identity
 echo "## Logging in to Azure with identity"
-az login --identity
+sudo az login --identity
 
 # Get the VM region from azure
 echo "## Getting the VM region from Azure"
-VM_REGION=$(az vm list --query "[].location" -o tsv | head -n 1)
+VM_REGION=$(sudo az vm list --query "[].location" -o tsv | head -n 1)
 
 # get vm name from azure
 echo "## Getting the VM name from Azure"    
-VM_HOST=$(az vm list --query "[].name" -o tsv)
+VM_HOST=$(sudo az vm list --query "[].name" -o tsv)
 
 # get vm resource group from azure
 echo "## Getting the VM resource group from Azure"
-VM_RESOURCE_GROUP=$(az vm list --query "[].resourceGroup" -o tsv)
+VM_RESOURCE_GROUP=$(sudo az vm list --query "[].resourceGroup" -o tsv)
 
 # Update resolv.conf to include FQDN
 echo "## Setting Fully Qualified Domain Name (FQDN) to $VM_HOST.$VM_REGION.cloudapp.azure.com"
