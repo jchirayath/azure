@@ -11,22 +11,24 @@ if [ "$EUID" -ne 0 ]; then
     exec sudo "$0" "$@"
 fi
 
+# Stop Apache2 Web Server
+echo "Stopping Apache2..."
+if ! systemctl stop apache2; then
+    echo "Failed to stop Apache2"
+    exit 1
+fi
+
+echo "Disabling Apache2..."
+if ! systemctl disable apache2; then
+    echo "Failed to disable Apache2"
+    exit 1
+fi
+
 echo "Installing Nginx..."
 if ! apt-get install nginx -y; then
         echo "Failed to install Nginx"
         exit 1
 fi
-
-# # Enable nginx SSL module
-# if ! sed -i 's/# listen 443 ssl default_server;/listen 443 ssl default_server;/g' /etc/nginx/sites-enabled/default; then
-#         echo "Failed to update SSL configuration"
-#         exit 1
-# fi
-
-# if ! sed -i 's/# listen [::]:443 ssl default_server;/listen [::]:443 ssl default_server;/g' /etc/nginx/sites-enabled/default; then
-#         echo "Failed to update SSL configuration"
-#         exit 1
-# fi
 
 # Install Certbot
 echo "Installing Certbot..."
@@ -37,7 +39,7 @@ fi
 
 # configure certbot for nginx
 echo "Configuring Certbot for Nginx..."
-if ! certbot --nginx --non-interactive --agree-tos --email $EMAIL; then
+if ! certbot --nginx -d $HOSTNAME --non-interactive --agree-tos --email $EMAIL; then
     echo "Failed to configure Certbot for Nginx"
     exit 1
 fi
