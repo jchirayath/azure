@@ -184,8 +184,7 @@ else
     echo "## Managed identity for the VM already exists."
 fi
 
-# Install and run SetupMail.sh on the VM
-echo "## Installing scripts on the VM"
+# Install and run SetupHost.sh on the VM
 if [ $SCRIPT_SETUPHOST = "TRUE" ]; then
     echo "## Installing SetUpHost.sh"
     az vm extension set \
@@ -201,6 +200,14 @@ if [ $SCRIPT_SETUPHOST = "TRUE" ]; then
     echo "## SetUpHost.sh completed"
 else
     echo "## Skipping SetUpHost.sh"
+fi
+
+# Check if the VM is ready sine the VM was rebooted
+echo "## Checking if the VM is ready"
+az vm show --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --show-details --query powerState -o tsv
+if [ $? -ne 0 ]; then
+    echo "## Error: VM $VM_HOSTNAME is not ready."
+    exit 1
 fi
 
 # Install and run FirewallInstall.sh on the VM
@@ -239,7 +246,152 @@ else
     echo "## Skipping Fail2Ban_Install.sh"
 fi
 
+# Install and run MailSetup.sh on the VM
+if [ $SCRIPT_MAILSETUP = "TRUE" ]; then
+    echo "## Installing MailSetup.sh"
+    az vm extension set \
+        --resource-group ${VM_RESOURCE_GROUP} \
+        --vm-name $VM_HOSTNAME \
+        --name CustomScript \
+        --publisher Microsoft.Azure.Extensions \
+        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Mail_Setup.sh"],"commandToExecute":"./Mail_Setup.sh"}'
+
+    echo "## Waiting for MailSetup.sh to complete"
+    az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
+    az vm extension wait --resource-group $VM_RESOURCE_GROUP --vm-name $VM_HOSTNAME --name CustomScript --created
+    echo "## MailSetup.sh completed"
+else
+    echo "## Skipping MailSetup.sh"
+fi
+
+# Install and run GuacInstall.sh on the VM
+if [ $SCRIPT_GUACINSTALL = "TRUE" ]; then
+    echo "## Installing GuacInstall.sh"
+    az vm extension set \
+        --resource-group ${VM_RESOURCE_GROUP} \
+        --vm-name $VM_HOSTNAME \
+        --name CustomScript \
+        --publisher Microsoft.Azure.Extensions \
+        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Guac_Install.sh"],"commandToExecute":"./Guac_Install.sh"}'
+
+    echo "## Waiting for GuacInstall.sh to complete"
+    az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
+    az vm extension wait --resource-group $VM_RESOURCE_GROUP --vm-name $VM_HOSTNAME --name CustomScript --created
+    echo "## GuacInstall.sh completed"
+else
+    echo "## Skipping GuacInstall.sh"
+fi
+
+# Install and run NginxInstall.sh on the VM
+if [ $SCRIPT_NGINXINSTALL = "TRUE" ]; then
+    echo "## Installing NginxInstall.sh"
+    az vm extension set \
+        --resource-group ${VM_RESOURCE_GROUP} \
+        --vm-name $VM_HOSTNAME \
+        --name CustomScript \
+        --publisher Microsoft.Azure.Extensions \
+        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Nginx_Install.sh"],"commandToExecute":"./Nginx_Install.sh"}'
+
+    echo "## Waiting for NginxInstall.sh to complete"
+    az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
+    az vm extension wait --resource-group $VM_RESOURCE_GROUP --vm-name $VM_HOSTNAME --name CustomScript --created
+    echo "## NginxInstall.sh completed"
+else
+    echo "## Skipping NginxInstall.sh"
+fi
+
+# Install and run PrivoxyInstall.sh on the VM
+if [ $SCRIPT_PRIVOXYINSTALL = "TRUE" ]; then
+    echo "## Installing PrivoxyInstall.sh"
+    az vm extension set \
+        --resource-group ${VM_RESOURCE_GROUP} \
+        --vm-name $VM_HOSTNAME \
+        --name CustomScript \
+        --publisher Microsoft.Azure.Extensions \
+        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Privoxy_Install.sh"],"commandToExecute":"./Privoxy_Install.sh"}'
+
+    echo "## Waiting for PrivoxyInstall.sh to complete"
+    az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
+    az vm extension wait --resource-group $VM_RESOURCE_GROUP --vm-name $VM_HOSTNAME --name CustomScript --created
+    echo "## PrivoxyInstall.sh completed"
+else
+    echo "## Skipping PrivoxyInstall.sh"
+fi
+
+# Install and run MySQLInstall.sh on the VM
+if [ $SCRIPT_MYSQLINSTALL = "TRUE" ]; then
+    echo "## Installing MySQLInstall.sh"
+    az vm extension set \
+        --resource-group ${VM_RESOURCE_GROUP} \
+        --vm-name $VM_HOSTNAME \
+        --name CustomScript \
+        --publisher Microsoft.Azure.Extensions \
+        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/MySQL_Install.sh"],"commandToExecute":"./MySQL_Install.sh"}'
+
+    echo "## Waiting for MySQLInstall.sh to complete"
+    az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
+    az vm extension wait --resource-group $VM_RESOURCE_GROUP --vm-name $VM_HOSTNAME --name CustomScript --created
+    echo "## MySQLInstall.sh completed"
+else
+    echo "## Skipping MySQLInstall.sh"
+fi
+
+# Install and run LynisInstall.sh on the VM
+if [ $SCRIPT_LYNISINSTALL = "TRUE" ]; then
+    echo "## Installing LynisInstall.sh"
+    az vm extension set \
+        --resource-group ${VM_RESOURCE_GROUP} \
+        --vm-name $VM_HOSTNAME \
+        --name CustomScript \
+        --publisher Microsoft.Azure.Extensions \
+        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Lynis_Install.sh"],"commandToExecute":"./Lynis_Install.sh"}'
+
+    echo "## Waiting for LynisInstall.sh to complete"
+    az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
+    az vm extension wait --resource-group $VM_RESOURCE_GROUP --vm-name $VM_HOSTNAME --name CustomScript --created
+    echo "## LynisInstall.sh completed"
+else
+    echo "## Skipping LynisInstall.sh"
+fi
+
+# Install and run TakeBackup.sh on the VM
+if [ $SCRIPT_TAKEBACKUP = "TRUE" ]; then
+    echo "## Installing TakeBackup.sh"
+    az vm extension set \
+        --resource-group ${VM_RESOURCE_GROUP} \
+        --vm-name $VM_HOSTNAME \
+        --name CustomScript \
+        --publisher Microsoft.Azure.Extensions \
+        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/TakeBackup.sh"],"commandToExecute":"./TakeBackup.sh"}'
+
+    echo "## Waiting for TakeBackup.sh to complete"
+    az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
+    az vm extension wait --resource-group $VM_RESOURCE_GROUP --vm-name $VM_HOSTNAME --name CustomScript --created
+    echo "## TakeBackup.sh completed"
+else
+    echo "## Skipping TakeBackup.sh"
+fi
+
+# Install and run VaultPasswords.sh on the VM
+if [ $SCRIPT_VAULTPASSWORDS = "TRUE" ]; then
+    echo "## Installing VaultPasswords.sh"
+    az vm extension set \
+        --resource-group ${VM_RESOURCE_GROUP} \
+        --vm-name $VM_HOSTNAME \
+        --name CustomScript \
+        --publisher Microsoft.Azure.Extensions \
+        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Vault_Passwords.sh"],"commandToExecute":"./Vault_Passwords.sh"}'
+
+    echo "## Waiting for VaultPasswords.sh to complete"
+    az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
+    az vm extension wait --resource-group $VM_RESOURCE_GROUP --vm-name $VM_HOSTNAME --name CustomScript --created
+    echo "## VaultPasswords.sh completed"
+else
+    echo "## Skipping VaultPasswords.sh"
+fi
+
 # Display all the resources created
+echo "#####################"
 echo "## Resources created:"
 echo "## Resource Group: $VM_RESOURCE_GROUP"
 echo "## VM Name: $VM_HOSTNAME"
@@ -263,6 +415,4 @@ echo "## Identity Object ID: $(az identity show --name $VM_HOSTNAME-Identity --r
 echo "## End of script"
 echo "## The script has completed successfully."
 echo "## Please check the output for any errors."
-echo "Initiating Reboot of Server"
-sudo reboot
 echo "## Exiting..."

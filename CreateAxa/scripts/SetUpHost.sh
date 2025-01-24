@@ -33,3 +33,7 @@ sudo timedatectl set-timezone America/Los_Angeles
 echo "## Setting the locale to en_US.UTF-8"
 sudo locale-gen en_US.UTF-8
 sudo update-locale LANG=en_US.UTF-8
+
+# Intitiating a reboot of the VM post package upgrade
+echo "Initiating Reboot of Server"
+sudo reboot
