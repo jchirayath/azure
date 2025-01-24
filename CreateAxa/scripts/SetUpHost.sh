@@ -17,13 +17,13 @@ echo "## Getting the VM resource group from Azure"
 VM_RESOURCE_GROUP=$(az vm list --query "[].resourceGroup" -o tsv)
 
 # Update resolv.conf to include FQDN
-echo "## Setting Fully Qualified Domain Name (FQDN) to $myVM_HOST.$myVM_REGION.cloudapp.azure.com"
-echo "$myVM_HOST.$myVM_REGION.cloudapp.azure.com" | sudo tee /etc/hostname
-echo "127.0.1.1 $myVM_HOST.$myVM_REGION.cloudapp.azure.com $myVM_HOST" | sudo tee -a /etc/hosts
+echo "## Setting Fully Qualified Domain Name (FQDN) to $VM_HOST.$VM_REGION.cloudapp.azure.com"
+echo "$VM_HOST.$VM_REGION.cloudapp.azure.com" | sudo tee /etc/hostname
+echo "127.0.1.1 $VM_HOST.$VM_REGION.cloudapp.azure.com $VM_HOST" | sudo tee -a /etc/hosts
 
 # Update resolv.conf to include FQDN
 echo "## Updating resolv.conf to include FQDN"
-sudo sed -i "s/search.*/search $myVM_HOST.$myVM_REGION.cloudapp.azure.com/g" /etc/resolv.conf
+sudo sed -i "s/search.*/search $VM_HOST.$VM_REGION.cloudapp.azure.com/g" /etc/resolv.conf
 
 ## Set the timezone to California
 echo "## Setting the timezone to California"
