@@ -6,7 +6,7 @@ az login --identity
 
 # Get the VM region from azure
 echo "## Getting the VM region from Azure"
-VM_REGION=$(az configure --list-defaults | grep location | awk '{print $2}')
+VM_REGION=$(az vm list --query "[].location" -o tsv | head -n 1)
 
 # get vm name from azure
 echo "## Getting the VM name from Azure"    
