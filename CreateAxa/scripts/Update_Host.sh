@@ -18,8 +18,6 @@ function install_necessary_software() {
         php \
         php-mysql \
         mysql-client \
-        realmd \
-        samba-common \
         nmap \
         rsync \
         screen \
