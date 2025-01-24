@@ -184,7 +184,8 @@ else
     echo "## Managed identity for the VM already exists."
 fi
 
-#cho "## Installing scripts on the VM"
+# Install and run SetupMail.sh on the VM
+echo "## Installing scripts on the VM"
 if [ $SCRIPT_SETUPHOST = "TRUE" ]; then
     echo "## Installing SetUpHost.sh"
     az vm extension set \
@@ -200,6 +201,42 @@ if [ $SCRIPT_SETUPHOST = "TRUE" ]; then
     echo "## SetUpHost.sh completed"
 else
     echo "## Skipping SetUpHost.sh"
+fi
+
+# Install and run FirewallInstall.sh on the VM
+if [ $SCRIPT_FIREWALLINSTALL = "TRUE" ]; then
+    echo "## Installing FirewallInstall.sh"
+    az vm extension set \
+        --resource-group ${VM_RESOURCE_GROUP} \
+        --vm-name $VM_HOSTNAME \
+        --name CustomScript \
+        --publisher Microsoft.Azure.Extensions \
+        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Firewall_Install.sh"],"commandToExecute":"./Firewall_Install.sh"}'
+
+    echo "## Waiting for FirewallInstall.sh to complete"
+    az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
+    az vm extension wait --resource-group $VM_RESOURCE_GROUP --vm-name $VM_HOSTNAME --name CustomScript --created
+    echo "## FirewallInstall.sh completed"
+else
+    echo "## Skipping FirewallInstall.sh"
+fi
+
+# Install and run Fail2Ban_Install.sh on the VM
+if [ $SCRIPT_FAIL2BANINSTALL = "TRUE" ]; then
+    echo "## Installing Fail2Ban_Install.sh"
+    az vm extension set \
+        --resource-group ${VM_RESOURCE_GROUP} \
+        --vm-name $VM_HOSTNAME \
+        --name CustomScript \
+        --publisher Microsoft.Azure.Extensions \
+        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Fail2Ban_Install.sh"],"commandToExecute":"./Fail2Ban_Install.sh"}'
+
+    echo "## Waiting for Fail2Ban_Install.sh to complete"
+    az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
+    az vm extension wait --resource-group $VM_RESOURCE_GROUP --vm-name $VM_HOSTNAME --name CustomScript --created
+    echo "## Fail2Ban_Install.sh completed"
+else
+    echo "## Skipping Fail2Ban_Install.sh"
 fi
 
 # Display all the resources created
@@ -219,11 +256,13 @@ echo "## - guacamoleHost"
 echo "## - guacamoleUser"
 echo "## - guacamolePassword"
 echo "## Managed Identity: $VM_HOSTNAME-Identity"
-echo "## Identity ID: $IDENTITY_ID"
-echo "## Identity Object ID: $IDENTITY_OBJECT_ID"
+echo "## Identity ID: $(az identity show --name $VM_HOSTNAME-Identity --resource-group $VM_RESOURCE_GROUP --query 'id' -o tsv)"
+echo "## Identity Object ID: $(az identity show --name $VM_HOSTNAME-Identity --resource-group $VM_RESOURCE_GROUP --query 'principalId' -o tsv)"
 
 # end of script
 echo "## End of script"
 echo "## The script has completed successfully."
 echo "## Please check the output for any errors."
+echo "Initiating Reboot of Server"
+sudo reboot
 echo "## Exiting..."
