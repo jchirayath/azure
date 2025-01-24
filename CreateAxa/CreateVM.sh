@@ -74,10 +74,22 @@ if ! az vm show --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME &>/dev/n
         --os-disk-name ${VM_HOSTNAME}-osdisk \
         --os-disk-size-gb $VM_DISK_SIZE \
         --ssh-key-value ~/.ssh/$VM_AZURE_KEY.pub
-        --CustomScriptExtension '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Update_Host.sh"],"commandToExecute":"./Update_Host.sh"}'
+
+    echo "## Adding CustomScript extension to the VM"
+    az vm extension set \
+        --resource-group $VM_RESOURCE_GROUP \
+        --vm-name $VM_HOSTNAME \
+        --name CustomScript \
+        --publisher Microsoft.Azure.Extensions \
+        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Update_Host.sh"],"commandToExecute":"./Update_Host.sh"}'
 else
     echo "## VM $VM_HOSTNAME already exists."
 fi
+
+# Proceed only if the VM and CustomScript extension are completed
+echo "## Waiting for the VM and CustomScript extension to complete"
+az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
+az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --updated
 
 # Get the public IP address of the VM
 echo "## Getting the public IP address of the VM"
@@ -150,6 +162,11 @@ az vm extension set \
     --settings '{}'
 echo "## VM extension AADLoginForLinux installed"
 
+# Proceed only if the VM and AADLoginForLinux extension are completed
+echo "## Waiting for the VM and AADLoginForLinux extension to complete"
+az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
+az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --extension AADSSHLoginForLinux --provisioningState "Succeeded"
+
 #cho "## Installing scripts on the VM"
 if [ $SCRIPT_SETUPHOST = "TRUE" ]; then
     echo "## Installing SetUpHost.sh"
@@ -161,7 +178,8 @@ if [ $SCRIPT_SETUPHOST = "TRUE" ]; then
         --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/SetUpHost.sh"],"commandToExecute":"./SetUpHost.sh"}'
 
     echo "## Waiting for SetUpHost.sh to complete"
-    sleep 60
+    az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
+    az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --extension CustomScript --provisioningState "Succeeded"
     echo "## SetUpHost.sh completed"
 else
     echo "## Skipping SetUpHost.sh"
