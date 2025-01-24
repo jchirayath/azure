@@ -202,13 +202,13 @@ else
     echo "## Skipping SetUpHost.sh"
 fi
 
-# Check if the VM is ready sine the VM was rebooted
-echo "## Checking if the VM is ready"
-az vm show --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --show-details --query powerState -o tsv
-if [ $? -ne 0 ]; then
-    echo "## Error: VM $VM_HOSTNAME is not ready."
-    exit 1
-fi
+# reboot the VM via Azure CLI
+echo "## Rebooting the VM"
+az vm restart --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME
+
+# Wait for the VM to reboot
+echo "## Waiting for the VM to reboot"
+az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --updated
 
 # Install and run FirewallInstall.sh on the VM
 if [ $SCRIPT_FIREWALLINSTALL = "TRUE" ]; then
