@@ -10,7 +10,7 @@ VM_REGION=$(az vm list --query "[].location" -o tsv | head -n 1)
 
 # get vm name from azure
 echo "## Getting the VM name from Azure"    
-VM_NAME=$(az vm list --query "[].name" -o tsv)
+VM_HOST=$(az vm list --query "[].name" -o tsv)
 
 # get vm resource group from azure
 echo "## Getting the VM resource group from Azure"
