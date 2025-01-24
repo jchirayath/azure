@@ -14,7 +14,6 @@ function install_necessary_software() {
         unzip \
         expect \
         docker.io \
-        apache2 \
         php \
         php-mysql \
         mysql-client \
