@@ -2,13 +2,13 @@
 # Function to update packages
 function update_packages() {
     echo "Updating packages..."
-    sudo apt-get update && sudo apt-get upgrade -y
+    sudo DEBIAN_FRONTEND=noninteractive apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
 }
 
 # Function to install necessary software
 function install_necessary_software() {
     echo "## Installing necessary software"
-    sudo apt-get install -y \
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
         git \
         curl \
         unzip \
