@@ -29,6 +29,7 @@ function install_necessary_software() {
         traceroute \
         wget \
         perl \
+        python3 \
         net-tools
 }
 
