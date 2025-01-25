@@ -44,9 +44,23 @@ if ! certbot --nginx -d $HOSTNAME --non-interactive --agree-tos --email $EMAIL; 
     exit 1
 fi
 
-# Copy inde
-https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/files/index.html
+# Backup the original index.html if it exists
+if [ -f /var/www/html/index.html ]; then
+    echo "Backing up the original index.html..."
+    if ! mv /var/www/html/index.html /var/www/html/index.html.bak; then
+        echo "Failed to backup the original index.html"
+        exit 1
+    fi
+fi
 
+# Download the new index.html from the provided URL
+echo "Downloading the new index.html..."
+if ! curl -o /var/www/html/index.html https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/files/index.html; then
+    echo "Failed to download the new index.html"
+    exit 1
+fi
+
+# link the /usr/share/apache2 
 
 # Enable nginx
 echo "Enabling nginx..."
