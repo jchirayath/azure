@@ -2,51 +2,21 @@
 
 # Log in to Azure with identity
 echo "## Logging in to Azure with identity"
-retry=0
-max_retries=3
-until az login --identity || [ $retry -eq $max_retries ]; do
-    echo "Login attempt $((retry+1)) failed. Retrying..."
-    retry=$((retry+1))
-    sleep 5
-done
-if [ $retry -eq $max_retries ]; then
-    echo "Failed to log in to Azure after $max_retries attempts."
-    exit 1
-fi
+az login --identity
 
 # Get the VM region from azure
 echo "## Getting the VM region from Azure"
 VM_REGION=$(az vm list --query "[].location" -o tsv | head -n 1)
-if [ -z "$VM_REGION" ]; then
-    echo "Failed to get VM region from Azure."
-    exit 1
-fi
 
 # get vm name from azure
 echo "## Getting the VM name from Azure"    
 VM_HOST=$(az vm list --query "[].name" -o tsv)
-if [ -z "$VM_HOST" ]; then
-    echo "Failed to get VM name from Azure."
-    exit 1
-fi
 
 # get vm resource group from azure
 echo "## Getting the VM resource group from Azure"
 VM_RESOURCE_GROUP=$(az vm list --query "[].resourceGroup" -o tsv)
-if [ -z "$VM_RESOURCE_GROUP" ]; then
-    echo "Failed to get VM resource group from Azure."
-    exit 1
-fi
 
-# Get FQDN
-FQDN=$(hostname -f)
-# Ensure FQDN is valid and has a domain suffix
-if [[ -z "$FQDN" || "$FQDN" == *"localhost"* || "$FQDN" != *.* ]]; then
-    echo "Invalid FQDN: $FQDN"
-    exit 1
-fi
-
-# Set FQDN for the HOST
+# Update resolv.conf to include FQDN
 echo "## Setting Fully Qualified Domain Name (FQDN) to $VM_HOST.$VM_REGION.cloudapp.azure.com"
 # if ! echo "$VM_HOST.$VM_REGION.cloudapp.azure.com" | sudo tee /etc/hostname > /dev/null; then
 #     echo "Failed to set hostname."
