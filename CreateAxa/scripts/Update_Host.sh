@@ -50,14 +50,3 @@ echo "## Installing necessary software - Done"
 echo "## Installing Azure CLI"
 install_azure_cli
 echo "## Installing Azure CLI - Done"
-
-# # Log in to Azure with identity
-# echo "## Logging in to Azure with identity"
-# az login --identity
-# # check for errors
-# if [ $? -ne 0 ]; then
-#     echo "Error: Failed to log in to Azure with identity"
-#     exit 1
-# else
-#     echo "## Logged in to Azure with identity"
-# fi

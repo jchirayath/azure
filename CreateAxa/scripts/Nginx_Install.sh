@@ -44,6 +44,10 @@ if ! certbot --nginx -d $HOSTNAME --non-interactive --agree-tos --email $EMAIL; 
     exit 1
 fi
 
+# Copy inde
+https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/files/index.html
+
+
 # Enable nginx
 echo "Enabling nginx..."
 if ! systemctl enable nginx; then
