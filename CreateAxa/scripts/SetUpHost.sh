@@ -2,7 +2,19 @@
 
 # Log in to Azure with identity
 echo "## Logging in to Azure with identity"
-az login --identity
+for i in {1..3}; do
+    if az login --identity; then
+        echo "Successfully logged in to Azure."
+        break
+    else
+        echo "Failed to log in to Azure. Attempt $i of 3."
+        if [ $i -eq 3 ]; then
+            echo "Exceeded maximum login attempts. Exiting."
+            exit 1
+        fi
+        sleep 5
+    fi
+done
 
 # Get the VM region from azure
 echo "## Getting the VM region from Azure"
@@ -17,7 +29,7 @@ echo "## Getting the VM resource group from Azure"
 VM_RESOURCE_GROUP=$(az vm list --query "[].resourceGroup" -o tsv)
 
 # Update resolv.conf to include FQDN
-echo "## Setting Fully Qualified Domain Name (FQDN) to $VM_HOST.$VM_REGION.cloudapp.azure.com"
+# echo "## Setting Fully Qualified Domain Name (FQDN) to $VM_HOST.$VM_REGION.cloudapp.azure.com"
 # if ! echo "$VM_HOST.$VM_REGION.cloudapp.azure.com" | sudo tee /etc/hostname > /dev/null; then
 #     echo "Failed to set hostname."
 #     exit 1
