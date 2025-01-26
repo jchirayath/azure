@@ -60,7 +60,12 @@ if ! curl -o /var/www/html/index.html https://raw.githubusercontent.com/jchiraya
     exit 1
 fi
 
-# link the /usr/share/apache2 
+# Link the Apache2 icons directory to the Nginx web root
+echo "Linking the Apache2 icons directory to the Nginx web root..."
+if ! ln -s /usr/share/apache2/icons /var/www/html/icons; then
+    echo "Failed to link the Apache2 icons directory"
+    exit 1
+fi
 
 # Enable nginx
 echo "Enabling nginx..."
