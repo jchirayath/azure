@@ -5,6 +5,9 @@ myMySQLHOST="den1.mysql6.gear.host"
 myMySQLUSER="guacamoledb"
 myMySQLPASS="Of022_E5KvL-"
 
+# Set the output file variable
+OUTPUT_FILE="/root/tomcat_manager_password.txt"
+
 # export myMySQLHOST="den1.mysql6.gear.host"
 # export myMySQLUSER="guacamoledb"
 # export myMySQLPASS="Of022_E5KvL-"
@@ -14,7 +17,7 @@ echo "## Generating a new password for the Tomcat Manager"
 TOMCAT_MANAGER_PASSWORD=$(openssl rand -base64 32)
 echo "Tomcat Manager Password: $TOMCAT_MANAGER_PASSWORD"
 echo "Storing the Tomcat Manager Password in a file"
-echo "Tomcat Manager Password: $TOMCAT_MANAGER_PASSWORD" > tomcat_manager_password.txt
+echo "Tomcat Manager Password: $TOMCAT_MANAGER_PASSWORD" > $OUTPUT_FILE
 
 # Check if the Guacamole container is already running
 echo "## Checking if the Guacamole container is already running"
@@ -55,6 +58,7 @@ sudo docker exec some-guacamole /opt/guacamole/bin/initdb.sh --mysql > initdb.sq
 # mysql -h $myMySQLHOST -u $myMySQLUSER -p$myMySQLPASS guacamoledb -e "UPDATE guacamole_user SET password_hash = SHA2(CONCAT(password_salt, 'newpassword'), 256) WHERE user_id = 1;"
 
 # Restart the Guacamole container
+echo "## Restarting the Guacamole container"
 sudo docker restart some-guacamole
 
 # Wait for the Guacamole container to start
