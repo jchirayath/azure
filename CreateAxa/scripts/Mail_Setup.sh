@@ -28,14 +28,20 @@ echo "This is a test email" | mail -s "Test Email" "$MAIL_USER"
 sudo apt-get install -y certbot
 
 # Obtain SSL certificate
-# run the following if $HOSTNAME and $MAIL_USER are not blank
-if [[ -n "$HOSTNAME" && -n "$MAIL_USER" ]]; then
-    if ! sudo certbot certonly --standalone -d "$FQDN" --non-interactive --agree-tos -m "$MAIL_USER"; then
-        echo "Failed to obtain SSL certificate"
-        exit 1
-    fi
-else
-    echo "FQDN or MAIL_USER is blank"
+# Check if HOSTNAME and MAIL_USER are not empty
+if [[ -z "$HOSTNAME" ]]; then
+    echo "HOSTNAME is empty"
+    exit 1
+fi
+
+if [[ -z "$MAIL_USER" ]]; then
+    echo "MAIL_USER is empty"
+    exit 1
+fi
+
+# Obtain SSL certificate
+if ! sudo certbot certonly --standalone -d "$FQDN" --non-interactive --agree-tos -m "$MAIL_USER"; then
+    echo "Failed to obtain SSL certificate"
     exit 1
 fi
 
