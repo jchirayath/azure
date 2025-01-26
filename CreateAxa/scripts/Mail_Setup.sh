@@ -28,8 +28,8 @@ echo "This is a test email" | mail -s "Test Email" "$MAIL_USER"
 sudo apt-get install -y certbot
 
 # Obtain SSL certificate
-# run the following if $FQDN and $MAIL_USER are not blank
-if [[ -n "$FQDN" && -n "$MAIL_USER" ]]; then
+# run the following if $HOSTNAME and $MAIL_USER are not blank
+if [[ -n "$HOSTNAME" && -n "$MAIL_USER" ]]; then
     if ! sudo certbot certonly --standalone -d "$FQDN" --non-interactive --agree-tos -m "$MAIL_USER"; then
         echo "Failed to obtain SSL certificate"
         exit 1
