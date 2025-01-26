@@ -1,5 +1,6 @@
 #!/bin/bash
 MAIL_USER="jacobc@aspl.net"
+MAIL_FROM_USER="jacobc"
 
 # Get machine FQDN
 FQDN=$(hostname -f)
@@ -21,7 +22,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mailutils
 # sudo debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
 
 # send test mail
-echo "This is a test email" | mail -s "Test Email" "$MAIL_USER"
+echo "This is a test email" | mail -s "Test Email" -r "$MAIL_FROM_USER@$FQDN" "$MAIL_USER"
 
 # Configure mail to support SSL
 # Install Certbot for SSL certificates
