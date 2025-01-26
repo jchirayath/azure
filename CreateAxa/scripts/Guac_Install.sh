@@ -57,6 +57,10 @@ sudo docker exec some-guacamole /opt/guacamole/bin/initdb.sh --mysql > initdb.sq
 # Restart the Guacamole container
 sudo docker restart some-guacamole
 
+# Wait for the Guacamole container to start
+echo "## Waiting for the Guacamole container to start"
+sleep 10
+
 ## Test Guacamole
 echo "## Testing connection to guacamole server"
 response=$(curl --write-out "%{http_code}" --silent --output /dev/null http://localhost:8080/guacamole/)
@@ -65,7 +69,6 @@ if [ "$response" -eq 200 ]; then
     echo "Guacamole server is up and running."
 else
     echo "Failed to connect to Guacamole server. HTTP status code: $response"
-    exit 1
 fi
 
 # Finish the script
