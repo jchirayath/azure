@@ -4,7 +4,7 @@ MAIL_USER="jacobc@aspl.net"
 # Get machine FQDN
 FQDN=$(hostname -f)
 # Ensure FQDN is valid
-if [[ -z "$FQDN" || "$FQDN" == *"localhost"* ]]; then
+if [ -z "$FQDN" ] || [ "$FQDN" = *"localhost"* ]; then
     echo "Invalid FQDN: $FQDN"
     exit 1
 fi
@@ -29,12 +29,12 @@ sudo apt-get install -y certbot
 
 # Obtain SSL certificate
 # Check if HOSTNAME and MAIL_USER are not empty
-if [[ -z "$FQDN" ]]; then
+if [ -z "$FQDN" ]; then
     echo "FQDN is empty"
     exit 1
 fi
 
-if [[ -z "$MAIL_USER" ]]; then
+if [ -z "$MAIL_USER" ]; then
     echo "MAIL_USER is empty"
     exit 1
 fi
@@ -45,22 +45,22 @@ if ! sudo certbot certonly --standalone -d "$FQDN" --non-interactive --agree-tos
     exit 1
 fi
 
-# # Configure Postfix to use the SSL certificate only if the previous command passes
-# if [ $? -eq 0 ]; then
-#     sudo postconf -e "smtpd_tls_cert_file=/etc/letsencrypt/live/$FQDN/fullchain.pem"
-#     sudo postconf -e "smtpd_tls_key_file=/etc/letsencrypt/live/$FQDN/privkey.pem"
-#     sudo postconf -e 'smtpd_use_tls=yes'
-# else
-#     echo "Previous command failed, skipping Postfix SSL configuration"
-#     exit 1
-# fi
+# Configure Postfix to use the SSL certificate only if the previous command passes
+if [ $? -eq 0 ]; then
+    sudo postconf -e "smtpd_tls_cert_file=/etc/letsencrypt/live/$FQDN/fullchain.pem"
+    sudo postconf -e "smtpd_tls_key_file=/etc/letsencrypt/live/$FQDN/privkey.pem"
+    sudo postconf -e 'smtpd_use_tls=yes'
+else
+    echo "Previous command failed, skipping Postfix SSL configuration"
+    exit 1
+fi
 
 # Restart postfix to apply changes
 sudo systemctl restart postfix
 
 # Test postfix server
 echo "This is a test email from postfix" | mail -s "Postfix Test Email" "$MAIL_USER"
-if [[ $? -eq 0 ]]; then
+if [ $? -eq 0 ]; then
     echo "Postfix test email sent successfully"
 else
     echo "Failed to send postfix test email"
@@ -71,15 +71,15 @@ fi
 CERT_FILE="/etc/letsencrypt/live/$FQDN/fullchain.pem"
 KEY_FILE="/etc/letsencrypt/live/$FQDN/privkey.pem"
 
-if [[ -f "$CERT_FILE" && -f "$KEY_FILE" ]]; then
-    echo "SSL certificate and key files exist"
+if sudo [ -f "$KEY_FILE" ] && sudo [ -f "$CERT_FILE" ]; then
+    echo "SSL key and certificate files exist"
 else
-    echo "SSL certificate or key file is missing"
+    echo "SSL key or certificate file is missing"
     exit 1
 fi
 
 # Check certificate expiration date
-EXPIRATION_DATE=$(openssl x509 -enddate -noout -in "$CERT_FILE" | cut -d= -f2)
+EXPIRATION_DATE=$(sudo openssl x509 -enddate -noout -in "$CERT_FILE" | cut -d= -f2)
 echo "SSL certificate expiration date: $EXPIRATION_DATE"
 
 # Test postfix server using openssl
@@ -95,7 +95,7 @@ This is a test email sent using OpenSSL.
 QUIT
 EOF
 # Send the e-mail
-if [[ $? -eq 0 ]]; then
+if [ $? -eq 0 ]; then
     echo "OpenSSL test email sent successfully"
 else
     echo "Failed to send OpenSSL test email"
