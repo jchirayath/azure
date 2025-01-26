@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# SEt Key Vault Name
-KEYVAULT_NAME="kv-aspl-westus3"
-
 # Log in to Azure with identity
 echo "## Logging in to Azure with identity"
 for i in {1..3}; do
@@ -21,32 +18,38 @@ done
 
 # Get the VM region from azure
 echo "## Getting the VM region from Azure"
-VM_REGION=$(az vm list --query "[].location" -o tsv | head -n 1)
+az keyvault list --query "[].name" -o tsv
 
 # get vm name from azure
 echo "## Getting the VM name from Azure"    
 VM_HOST=$(az vm list --query "[].name" -o tsv)
 
-# # Get the key vault name from azure
+# Get the VM region from azure
+echo "## Getting the VM region from Azure"
+VM_REGION=$(az vm list --query "[].location" -o tsv | head -n 1)
+
+# Set Key Vault Name
+KEYVAULT_NAME="kv-$VM_HOST-$VM_REGION"
+
+# ## Get the key vault name from azure
 # echo "## Getting the Key Vault name from Azure"
 # KEYVAULT_NAME=$(az keyvault list --query "[].name" -o tsv)
 
-# # Check if the key vault exists and retrive the MYSQL admin password
-# echo "## Checking if the Key Vault exists and retrieving the MYSQL admin password"
-# if ! az keyvault secret show --name mysqlAdminPassword --vault-name "$KEYVAULT_NAME"; then
-#     echo "Key Vault does not exist or MySQL admin password not found."
-#     exit 1
-# fi
-
-# # Get the MYSQL admin password from the key vault
-# echo "## Getting the MYSQL admin password from the Key Vault"
-# MYSQL_ADMIN_PASSWORD=$(az keyvault secret show --name mysqlAdminPassword --vault-name "$KEYVAULT_NAME" --query value -o tsv)
+# Check if the key vault exists and retrive the MYSQL admin password
+echo "## Checking if the Key Vault exists and retrieving the MYSQL admin password"
+if ! az keyvault secret show --name mysqlAdminPassword --vault-name "$KEYVAULT_NAME"; then
+    echo "Key Vault does not exist or MySQL admin password not found."
+    exit 1
+else
+    # echo "## Getting the MYSQL admin password from the Key Vault"
+    MYSQL_ADMIN_PASSWORD=$(az keyvault secret show --name mysqlAdminPassword --vault-name "$KEYVAULT_NAME" --query value -o tsv)
+fi
 
 # If the MYSQL admin password is empty, create a new password and store it in a local file in current directory
 if [ -z "$MYSQL_ADMIN_PASSWORD" ]; then
     echo "MYSQL admin password not found in Key Vault. Creating a new password..."
     MYSQL_ADMIN_PASSWORD=$(openssl rand -base64 12)
-    echo "MYSQL_ADMIN_PASSWORD=$MYSQL_ADMIN_PASSWORD" > mysql_admin_password.txt
+    echo "MYSQL_ADMIN_PASSWORD=$MYSQL_ADMIN_PASSWORD" > /root/mysql_admin_password.txt
     echo "MYSQL admin password created and stored in mysql_admin_password.txt"
 fi
 
@@ -57,22 +60,46 @@ fi
 #     echo "Continuing with the installation..."
 # fi
 
-# Install MySQL
-echo "Installing MySQL..."
-if sudo apt-get install mysql-server -y; then
-    echo "MySQL installation succeeded."
+# Install MySQL if not already installed
+
+# Check if MySQL is already installed
+echo "## Checking if MySQL is already installed"
+if mysql --version; then
+    echo "MySQL is already installed."
 else
-    echo "MySQL installation failed."
-    exit 1
+    echo "MySQL is not installed."
+    # Install MySQL
+    echo "Installing MySQL..."
+    if sudo apt-get install mysql-server -y; then
+        echo "MySQL installation succeeded."
+    else
+        echo "MySQL installation failed."
+        exit 1
+    fi  
 fi
 
-# Start and enable MySQL service
-echo "Starting and enabling MySQL service..."
-if sudo systemctl start mysql && sudo systemctl enable mysql; then
-    echo "MySQL service started and enabled."
+# check if mysql service is running
+echo "## Checking if MySQL service is running"
+if sudo systemctl is-active --quiet mysql; then
+    echo "MySQL service is already running."
+    # Restart MySQL service
+    echo "Restarting MySQL service..."
+    if sudo systemctl restart mysql; then
+        echo "MySQL service restarted."
+    else
+        echo "Failed to restart MySQL service."
+        exit 1
+    fi
 else
-    echo "Failed to start and enable MySQL service."
-    exit 1
+    echo "MySQL service is not running."
+    # Start and enable MySQL service
+    echo "Starting and enabling MySQL service..."
+    if sudo systemctl start mysql && sudo systemctl enable mysql; then
+        echo "MySQL service started and enabled."
+    else
+        echo "Failed to start and enable MySQL service."
+        exit 1
+    fi
 fi
 
 # Set the MySQL root password
@@ -93,4 +120,6 @@ else
     exit 1
 fi
 
-
+# Complete MySQL installation
+echo "MySQL installation completed successfully."
+exit 0

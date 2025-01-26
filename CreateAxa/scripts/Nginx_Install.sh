@@ -69,6 +69,42 @@ if ! sudo ln -s /usr/share/apache2/icons /var/www/html/icons; then
     echo "Failed to link the Apache2 icons directory probably exists"
 fi
 
+# Configure Nginx to proxy Apache Guacamole on port 8080 only if the configuration file does not exist
+if [ ! -f /etc/nginx/sites-available/guacamole ]; then
+    echo "Configuring Nginx to proxy Apache Guacamole on port 8080..."
+    if ! sudo tee /etc/nginx/sites-available/guacamole <<EOF
+server {
+
+    location /guacamole/ {
+        proxy_pass http://localhost:8080/guacamole/;
+        proxy_buffering off;
+        proxy_http_version 1.1;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection \$http_connection;
+        access_log off;
+    }
+}
+EOF
+    then
+        echo "Failed to configure Nginx to proxy Apache Guacamole on port 8080"
+        exit 1
+    fi
+else
+    echo "Nginx configuration for Apache Guacamole already exists. Skipping..."
+fi
+
+# Create a symbolic link to the Nginx configuration file if it does not exist
+if [ ! -f /etc/nginx/sites-enabled/guacamole ]; then
+    echo "Creating a symbolic link to the Nginx configuration file..."
+    if ! sudo ln -s /etc/nginx/sites-available/guacamole /etc/nginx/sites-enabled/; then
+        echo "Failed to create a symbolic link to the Nginx configuration file"
+        exit 1
+    fi
+else
+    echo "Symbolic link to the Nginx configuration file already exists. Skipping..."
+fi
+
 # Enable nginx
 echo "Enabling nginx..."
 if ! sudo systemctl enable nginx; then
