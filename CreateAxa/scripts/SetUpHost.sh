@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Set the output file variable
+OUTPUT_FILE="/root/hostinfo.txt"
+
 # Log in to Azure with identity
 echo "## Logging in to Azure with identity"
 for i in {1..3}; do
@@ -85,15 +88,18 @@ if ! sudo update-locale LANG=en_US.UTF-8; then
 fi
 
 # Store all the variables into a file called hostinfo.txt
-echo "FQDN=$FQDN" >> hostinfo.txt
-echo "VM_REGION=$VM_REGION" > hostinfo.txt
-echo "VM_HOST=$VM_HOST" >> hostinfo.txt
-echo "VM_RESOURCE_GROUP=$VM_RESOURCE_GROUP" >> hostinfo.txt
-echo "HOSTNAME=$(hostname)" >> hostinfo.txt
-echo "DNS_SERVERS=$(grep -E '^nameserver' /etc/resolv.conf | awk '{print $2}' | paste -sd ',' -)" >> hostinfo.txt
-echo "RESOLVERS=$(grep -E '^search' /etc/resolv.conf | awk '{$1=""; print $0}' | xargs)" >> hostinfo.txt
-echo "MACHINE_ID=$(cat /etc/machine-id)" >> hostinfo.txt
-echo "TIMEZONE=$TIMEZONE" >> hostinfo.txt
-echo "LOCALE=$(locale | grep LANG | cut -d= -f2)" >> hostinfo.txt
+echo "## Storing all the variables into a file called hostinfo.txt"
+echo "## Creating the hostinfo.txt file"
+echo "HOSTINFO" > $OUTPUT_FILE
+echo "FQDN=$FQDN" >> $OUTPUT_FILE
+echo "VM_REGION=$VM_REGION" >> $OUTPUT_FILE
+echo "VM_HOST=$VM_HOST" >> $OUTPUT_FILE
+echo "VM_RESOURCE_GROUP=$VM_RESOURCE_GROUP" >> $OUTPUT_FILE
+echo "HOSTNAME=$(hostname)" >> $OUTPUT_FILE
+echo "DNS_SERVERS=$(grep -E '^nameserver' /etc/resolv.conf | awk '{print $2}' | paste -sd ',' -)" >> $OUTPUT_FILE
+echo "RESOLVERS=$(grep -E '^search' /etc/resolv.conf | awk '{$1=""; print $0}' | xargs)" >> $OUTPUT_FILE
+echo "MACHINE_ID=$(cat /etc/machine-id)" >> $OUTPUT_FILE
+echo "TIMEZONE=$TIMEZONE" >> $OUTPUT_FILE
+echo "LOCALE=$(locale | grep LANG | cut -d= -f2)" >> $OUTPUT_FILE
 
 # End of Script

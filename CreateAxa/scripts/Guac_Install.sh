@@ -16,6 +16,22 @@ echo "Tomcat Manager Password: $TOMCAT_MANAGER_PASSWORD"
 echo "Storing the Tomcat Manager Password in a file"
 echo "Tomcat Manager Password: $TOMCAT_MANAGER_PASSWORD" > tomcat_manager_password.txt
 
+# Check if the Guacamole container is already running
+echo "## Checking if the Guacamole container is already running"
+if sudo docker ps -a --format '{{.Names}}' | grep -Eq "^some-guacamole$"; then
+    echo "Guacamole container is already running. Stopping and removing the container."
+    sudo docker stop some-guacamole
+    sudo docker rm some-guacamole
+fi
+
+# Check if the Guacd container is already running
+echo "## Checking if the Guacd container is already running"
+if sudo docker ps -a --format '{{.Names}}' | grep -Eq "^some-guacd$"; then
+    echo "Guacd container is already running. Stopping and removing the container."
+    sudo docker stop some-guacd
+    sudo docker rm some-guacd
+fi
+
 # Guacamole Install and run Guacd Daemon
 echo "## Installing and configuring Guacamole using Docker"
 sudo docker run --name some-guacd -d guacamole/guacd
@@ -30,9 +46,9 @@ sudo docker run --name some-guacamole --link some-guacd:guacd \
 echo "## Dumping the guacamole database for initialization"
 sudo docker exec some-guacamole /opt/guacamole/bin/initdb.sh --mysql > initdb.sql
 
-## Use the dump file to configure the guacamole database
-echo "## Configuring the guacamole database - NEW"
-mysql -h $myMySQLHOST -u $myMySQLUSER -p$myMySQLPASS guacamoledb < initdb.sql
+# ## Use the dump file to configure the guacamole database
+# echo "## Configuring the guacamole database - NEW"
+# mysql -h $myMySQLHOST -u $myMySQLUSER -p$myMySQLPASS guacamoledb < initdb.sql
 
 # # Update the mysql database guacmole user and password with new password
 # echo "## Updating the guacamole user password in the database"
