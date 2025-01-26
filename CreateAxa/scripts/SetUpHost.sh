@@ -28,23 +28,27 @@ VM_HOST=$(az vm list --query "[].name" -o tsv)
 echo "## Getting the VM resource group from Azure"
 VM_RESOURCE_GROUP=$(az vm list --query "[].resourceGroup" -o tsv)
 
-# Update resolv.conf to include FQDN
-# echo "## Setting Fully Qualified Domain Name (FQDN) to $VM_HOST.$VM_REGION.cloudapp.azure.com"
-# if ! echo "$VM_HOST.$VM_REGION.cloudapp.azure.com" | sudo tee /etc/hostname > /dev/null; then
-#     echo "Failed to set hostname."
-#     exit 1
-# fi
-# if ! sudo sed -i "s/^127\.0\.1\.1.*/127.0.1.1 $VM_HOST.$VM_REGION.cloudapp.azure.com $VM_HOST/" /etc/hosts; then
-#     echo "Failed to update /etc/hosts."
-#     exit 1
-# fi
+#Update resolv.conf to include FQDN
+if [[ -n "$VM_HOST" && -n "$VM_REGION" ]]; then
+    echo "## Setting Fully Qualified Domain Name (FQDN) to $VM_HOST.$VM_REGION.cloudapp.azure.com"
+    if ! echo "$VM_HOST.$VM_REGION.cloudapp.azure.com" | sudo tee /etc/hostname > /dev/null; then
+        echo "Failed to set hostname."
+        exit 1
+    fi
+    if ! sudo sed -i "s/^127\.0\.1\.1.*/127.0.1.1 $VM_HOST.$VM_REGION.cloudapp.azure.com $VM_HOST/" /etc/hosts; then
+        echo "Failed to update /etc/hosts."
+        exit 1
+    fi
 
-# # Update resolv.conf to include FQDN
-# echo "## Updating resolv.conf to include FQDN"
-# if ! sudo sed -i "s/search.*/search $VM_HOST.$VM_REGION.cloudapp.azure.com/g" /etc/resolv.conf; then
-#     echo "Failed to update /etc/resolv.conf."
-#     exit 1
-# fi
+    # Update resolv.conf to include FQDN
+    echo "## Updating resolv.conf to include FQDN"
+    if ! sudo sed -i "s/search.*/search $VM_HOST.$VM_REGION.cloudapp.azure.com/g" /etc/resolv.conf; then
+        echo "Failed to update /etc/resolv.conf."
+        exit 1
+    fi
+else
+    echo "VM_HOST or VM_REGION is empty. Skipping FQDN setup."
+fi
 
 ## Set the timezone based on VM Region
 echo "## Getting the timezone based on the VM region"

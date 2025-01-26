@@ -185,7 +185,7 @@ else
 fi
 
 # Install and run SetupHost.sh on the VM
-if [ $SCRIPT_SETUPHOST = "TRUE" ]; then
+if [ $SCRIPT_SETUP_HOST = "TRUE" ]; then
     echo "## Installing SetUpHost.sh"
     az vm extension set \
         --resource-group ${VM_RESOURCE_GROUP} \
@@ -211,7 +211,7 @@ echo "## Waiting for the VM to reboot"
 az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --updated
 
 # Install and run FirewallInstall.sh on the VM
-if [ $SCRIPT_FIREWALLINSTALL = "TRUE" ]; then
+if [ $SCRIPT_FIREWALL_INSTALL = "TRUE" ]; then
     echo "## Installing FirewallInstall.sh"
     az vm extension set \
         --resource-group ${VM_RESOURCE_GROUP} \
@@ -229,7 +229,7 @@ else
 fi
 
 # Install and run Fail2Ban_Install.sh on the VM
-if [ $SCRIPT_FAIL2BANINSTALL = "TRUE" ]; then
+if [ $SCRIPT_FAIL2BAN_INSTALL = "TRUE" ]; then
     echo "## Installing Fail2Ban_Install.sh"
     az vm extension set \
         --resource-group ${VM_RESOURCE_GROUP} \
@@ -247,7 +247,7 @@ else
 fi
 
 # Install and run MailSetup.sh on the VM
-if [ $SCRIPT_MAILSETUP = "TRUE" ]; then
+if [ $SCRIPT_MAIL_SETUP = "TRUE" ]; then
     echo "## Installing MailSetup.sh"
     az vm extension set \
         --resource-group ${VM_RESOURCE_GROUP} \
@@ -265,7 +265,7 @@ else
 fi
 
 # Install and run GuacInstall.sh on the VM
-if [ $SCRIPT_GUACINSTALL = "TRUE" ]; then
+if [ $SCRIPT_GUAC_INSTALL = "TRUE" ]; then
     echo "## Installing GuacInstall.sh"
     az vm extension set \
         --resource-group ${VM_RESOURCE_GROUP} \
@@ -283,7 +283,7 @@ else
 fi
 
 # Install and run NginxInstall.sh on the VM
-if [ $SCRIPT_NGINXINSTALL = "TRUE" ]; then
+if [ $SCRIPT_NGINX_INSTALL = "TRUE" ]; then
     echo "## Installing NginxInstall.sh"
     az vm extension set \
         --resource-group ${VM_RESOURCE_GROUP} \
@@ -301,7 +301,7 @@ else
 fi
 
 # Install and run PrivoxyInstall.sh on the VM
-if [ $SCRIPT_PRIVOXYINSTALL = "TRUE" ]; then
+if [ $SCRIPT_PRIVOXY_INSTALL = "TRUE" ]; then
     echo "## Installing PrivoxyInstall.sh"
     az vm extension set \
         --resource-group ${VM_RESOURCE_GROUP} \
@@ -319,7 +319,7 @@ else
 fi
 
 # Install and run MySQLInstall.sh on the VM
-if [ $SCRIPT_MYSQLINSTALL = "TRUE" ]; then
+if [ $SCRIPT_MYSQL_INSTALL = "TRUE" ]; then
     echo "## Installing MySQLInstall.sh"
     az vm extension set \
         --resource-group ${VM_RESOURCE_GROUP} \
@@ -337,7 +337,7 @@ else
 fi
 
 # Install and run LynisInstall.sh on the VM
-if [ $SCRIPT_LYNISINSTALL = "TRUE" ]; then
+if [ $SCRIPT_LYNIS_INSTALL = "TRUE" ]; then
     echo "## Installing LynisInstall.sh"
     az vm extension set \
         --resource-group ${VM_RESOURCE_GROUP} \
@@ -355,7 +355,7 @@ else
 fi
 
 # Install and run TakeBackup.sh on the VM
-if [ $SCRIPT_TAKEBACKUP = "TRUE" ]; then
+if [ $SCRIPT_TAKE_BACKUP = "TRUE" ]; then
     echo "## Installing TakeBackup.sh"
     az vm extension set \
         --resource-group ${VM_RESOURCE_GROUP} \
@@ -373,7 +373,7 @@ else
 fi
 
 # Install and run VaultPasswords.sh on the VM
-if [ $SCRIPT_VAULTPASSWORDS = "TRUE" ]; then
+if [ $SCRIPT_VAULT_PASSWORDS = "TRUE" ]; then
     echo "## Installing VaultPasswords.sh"
     az vm extension set \
         --resource-group ${VM_RESOURCE_GROUP} \
