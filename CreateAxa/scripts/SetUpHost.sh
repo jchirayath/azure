@@ -42,7 +42,7 @@ if [[ -n "$VM_HOST" && -n "$VM_REGION" ]]; then
 
     # Update resolv.conf to include FQDN
     echo "## Updating resolv.conf to include FQDN"
-    if ! sudo sed -i "s/search.*/search $VM_HOST.$VM_REGION.cloudapp.azure.com/g" /etc/resolv.conf; then
+    if ! sudo sed -i "s/search.*/search $VM_REGION.cloudapp.azure.com/g" /etc/resolv.conf; then
         echo "Failed to update /etc/resolv.conf."
         exit 1
     fi
