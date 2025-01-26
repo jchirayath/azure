@@ -75,7 +75,7 @@ if ! az vm show --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME &>/dev/n
         --os-disk-size-gb $VM_DISK_SIZE \
         --ssh-key-value ~/.ssh/$VM_AZURE_KEY.pub
 
-    echo "## Adding CustomScript extension to the VM"
+    echo "## Adding CustomScript extension to the VM -  Update_Host.sh"
     az vm extension set \
         --resource-group $VM_RESOURCE_GROUP \
         --vm-name $VM_HOSTNAME \
@@ -84,20 +84,6 @@ if ! az vm show --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME &>/dev/n
         --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Update_Host.sh"],"commandToExecute":"./Update_Host.sh"}'
 else
     echo "## VM $VM_HOSTNAME already exists."
-fi
-
-# Run the CustomScript extension to update the VM if VM was created
-if [ $? -eq 0 ]; then
-    echo "## Adding CustomScript extension to the VM"
-    az vm extension set \
-        --resource-group $VM_RESOURCE_GROUP \
-        --vm-name $VM_HOSTNAME \
-        --name CustomScript \
-        --publisher Microsoft.Azure.Extensions \
-        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Update_Host.sh"],"commandToExecute":"./Update_Host.sh"}'
-else
-    echo "## VM creatiob of $VM_HOSTNAME failed. Skipping CustomScript extension."
-    exit 1
 fi
 
 # Proceed only if the VM and CustomScript extension are completed
@@ -186,7 +172,7 @@ fi
 
 # Install and run SetupHost.sh on the VM
 if [ $SCRIPT_SETUP_HOST = "TRUE" ]; then
-    echo "## Installing SetUpHost.sh"
+    echo "## Installing and Running SetUpHost.sh"
     az vm extension set \
         --resource-group ${VM_RESOURCE_GROUP} \
         --vm-name $VM_HOSTNAME \
@@ -370,24 +356,6 @@ if [ $SCRIPT_TAKE_BACKUP = "TRUE" ]; then
     echo "## TakeBackup.sh completed"
 else
     echo "## Skipping TakeBackup.sh"
-fi
-
-# Install and run VaultPasswords.sh on the VM
-if [ $SCRIPT_VAULT_PASSWORDS = "TRUE" ]; then
-    echo "## Installing VaultPasswords.sh"
-    az vm extension set \
-        --resource-group ${VM_RESOURCE_GROUP} \
-        --vm-name $VM_HOSTNAME \
-        --name CustomScript \
-        --publisher Microsoft.Azure.Extensions \
-        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Vault_Passwords.sh"],"commandToExecute":"./Vault_Passwords.sh"}'
-
-    echo "## Waiting for VaultPasswords.sh to complete"
-    az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
-    az vm extension wait --resource-group $VM_RESOURCE_GROUP --vm-name $VM_HOSTNAME --name CustomScript --created
-    echo "## VaultPasswords.sh completed"
-else
-    echo "## Skipping VaultPasswords.sh"
 fi
 
 # Display all the resources created
