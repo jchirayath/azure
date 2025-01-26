@@ -19,6 +19,14 @@ for i in {1..3}; do
     fi
 done
 
+# Get machine FQDN
+FQDN=$(hostname -f)
+# Ensure FQDN is valid
+if [ -z "$FQDN" ] || [ "$FQDN" = *"localhost"* ]; then
+    echo "Invalid FQDN: $FQDN"
+fi
+echo "Machine FQDN: $FQDN"
+
 # Get the VM region from azure
 echo "## Getting the VM region from Azure"
 VM_REGION=$(az vm list --query "[].location" -o tsv | head -n 1)
