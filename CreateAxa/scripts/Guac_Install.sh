@@ -28,7 +28,7 @@ sudo docker run --name some-guacamole --link some-guacd:guacd \
 
 ## Dump the guacamole database for initialization
 echo "## Dumping the guacamole database for initialization"
-sudo docker exec -it some-guacamole /opt/guacamole/bin/initdb.sh --mysql > initdb.sql
+sudo docker exec some-guacamole /opt/guacamole/bin/initdb.sh --mysql > initdb.sql
 
 ## Use the dump file to configure the guacamole database
 echo "## Configuring the guacamole database - NEW"
@@ -43,4 +43,15 @@ sudo docker restart some-guacamole
 
 ## Test Guacamole
 echo "## Testing connection to guacamole server"
-curl http://localhost:8080/guacamole/
+response=$(curl --write-out "%{http_code}" --silent --output /dev/null http://localhost:8080/guacamole/)
+
+if [ "$response" -eq 200 ]; then
+    echo "Guacamole server is up and running."
+else
+    echo "Failed to connect to Guacamole server. HTTP status code: $response"
+    exit 1
+fi
+
+# Finish the script
+echo "## Guacamole Installation - Done"
+
