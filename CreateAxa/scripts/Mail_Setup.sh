@@ -17,7 +17,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y postfix
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mailutils
 
 # configure postfix non interactive
-# sudo debconf-set-selections <<< "postfix postfix/mailname string $HOSTNAME"
+# sudo debconf-set-selections <<< "postfix postfix/mailname string $FQDN"
 # sudo debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
 
 # send test mail
@@ -29,8 +29,8 @@ sudo apt-get install -y certbot
 
 # Obtain SSL certificate
 # Check if HOSTNAME and MAIL_USER are not empty
-if [[ -z "$HOSTNAME" ]]; then
-    echo "HOSTNAME is empty"
+if [[ -z "$FQDN" ]]; then
+    echo "FQDN is empty"
     exit 1
 fi
 
@@ -45,7 +45,7 @@ if ! sudo certbot certonly --standalone -d "$FQDN" --non-interactive --agree-tos
     exit 1
 fi
 
-# Configure Postfix to use the SSL certificate only if the previous command passes
+# # Configure Postfix to use the SSL certificate only if the previous command passes
 # if [ $? -eq 0 ]; then
 #     sudo postconf -e "smtpd_tls_cert_file=/etc/letsencrypt/live/$FQDN/fullchain.pem"
 #     sudo postconf -e "smtpd_tls_key_file=/etc/letsencrypt/live/$FQDN/privkey.pem"
