@@ -1,23 +1,65 @@
 #!/bin/bash
 
-# Define VARIABLES
-myMySQLHOST="den1.mysql6.gear.host"
-myMySQLUSER="guacamoledb"
-myMySQLPASS="Of022_E5KvL-"
+# Log in to Azure with identity
+echo "## Logging in to Azure with identity"
+for i in {1..3}; do
+    if az login --identity; then
+        echo "Successfully logged in to Azure."
+        break
+    else
+        echo "Failed to log in to Azure. Attempt $i of 3."
+        if [ $i -eq 3 ]; then
+            echo "Exceeded maximum login attempts. Exiting."
+            exit 1
+        fi
+        sleep 5
+    fi
+done
 
-# Set the output file variable
-OUTPUT_FILE="/root/tomcat_manager_password.txt"
+# Get the VM region from azure
+echo "## Getting the VM region from Azure"
+az keyvault list --query "[].name" -o tsv
 
-# export myMySQLHOST="den1.mysql6.gear.host"
-# export myMySQLUSER="guacamoledb"
-# export myMySQLPASS="Of022_E5KvL-"
+# get vm name from azure
+echo "## Getting the VM name from Azure"    
+VM_HOST=$(az vm list --query "[].name" -o tsv)
 
-# Generate a new password for the Tomcat Manager
-echo "## Generating a new password for the Tomcat Manager"
-TOMCAT_MANAGER_PASSWORD=$(openssl rand -base64 32)
-echo "Tomcat Manager Password: $TOMCAT_MANAGER_PASSWORD"
-echo "Storing the Tomcat Manager Password in a file"
-echo "Tomcat Manager Password: $TOMCAT_MANAGER_PASSWORD" > $OUTPUT_FILE
+# Get the VM region from azure
+echo "## Getting the VM region from Azure"
+VM_REGION=$(az vm list --query "[].location" -o tsv | head -n 1)
+
+# Set Key Vault Name
+KEYVAULT_NAME="kv-$VM_HOST-$VM_REGION"
+
+# Check if the key vault exists and retrive the guacamoleHost
+echo "## Checking if the Key Vault exists and retrieving the MYSQL admin password"
+if ! az keyvault secret show --name guacamoleHost --vault-name "$KEYVAULT_NAME"; then
+    echo "Key Vault does not exist or MySQL admin password not found."
+    exit 1
+else
+    # echo "## Getting the guacamoleHost the Key Vault"
+    myMySQLHOST=$(az keyvault secret show --name guacamoleHost --vault-name "$KEYVAULT_NAME" --query value -o tsv)
+    # echo "## Getting the guacamoleUser the Key Vault"
+    myMySQLUSER=$(az keyvault secret show --name guacamoleUser --vault-name "$KEYVAULT_NAME" --query value -o tsv)
+    # echo "## Getting the guacamolePassword the Key Vault"
+    myMySQLPASS=$(az keyvault secret show --name guacamolePassword --vault-name "$KEYVAULT_NAME" --query value -o tsv)
+fi
+
+# If the myMySQLHOST is empty set the value to default
+if [ -z "$myMySQLHOST" ]; then
+    echo "myMySQLHOST not found in Key Vault. Setting to default value..."
+    myMySQLHOST="den1.mysql6.gear.host"
+fi
+# If the myMySQLUSER is empty set the value to default
+if [ -z "$myMySQLUSER" ]; then
+    echo "myMySQLUSER not found in Key Vault. Setting to default value..."
+    myMySQLUSER="guacamoledb"
+fi
+# If the myMySQLPASS is empty set the value to default
+if [ -z "$myMySQLPASS" ]; then
+    echo "myMySQLPASS not found in Key Vault. Setting to default value..."
+    myMySQLPASS="Of022_E5KvL-"
+fi
 
 # Check if the Guacamole container is already running
 echo "## Checking if the Guacamole container is already running"
@@ -52,10 +94,6 @@ sudo docker exec some-guacamole /opt/guacamole/bin/initdb.sh --mysql > initdb.sq
 # ## Use the dump file to configure the guacamole database
 # echo "## Configuring the guacamole database - NEW"
 # mysql -h $myMySQLHOST -u $myMySQLUSER -p$myMySQLPASS guacamoledb < initdb.sql
-
-# # Update the mysql database guacmole user and password with new password
-# echo "## Updating the guacamole user password in the database"
-# mysql -h $myMySQLHOST -u $myMySQLUSER -p$myMySQLPASS guacamoledb -e "UPDATE guacamole_user SET password_hash = SHA2(CONCAT(password_salt, 'newpassword'), 256) WHERE user_id = 1;"
 
 # Restart the Guacamole container
 echo "## Restarting the Guacamole container"

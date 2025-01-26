@@ -91,21 +91,6 @@ echo "## Waiting for the VM and CustomScript extension to complete"
 az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
 az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --updated
 
-# Install VM extension AADLoginForLinux
-echo "## Installing VM extension AADLoginForLinux"
-az vm extension set \
-    --resource-group ${VM_RESOURCE_GROUP} \
-    --vm-name $VM_HOSTNAME \
-    --name AADSSHLoginForLinux \
-    --publisher Microsoft.Azure.ActiveDirectory \
-    --settings '{}'
-echo "## VM extension AADLoginForLinux installed"
-
-# Proceed only if the VM and AADLoginForLinux extension are completed
-echo "## Waiting for the VM and AADLoginForLinux extension to complete"
-az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
-az vm extension wait --resource-group $VM_RESOURCE_GROUP --vm-name $VM_HOSTNAME --name AADSSHLoginForLinux --created
-
 # Get the public IP address of the VM
 echo "## Getting the public IP address of the VM"
 VM_IP=$(az vm show --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --show-details --query publicIps -o tsv)
@@ -117,6 +102,7 @@ VM_DNS=$(az network public-ip show --resource-group $VM_RESOURCE_GROUP --name ${
 echo "## DNS name of the VM is $VM_DNS"
 
 # Check if the Key Vault exists
+KEYVAULT_NAME="kv-$VM_HOSTNAME-$VM_REGION"
 echo "## Checking if Key Vault exists"
 if ! az keyvault show --name $KEYVAULT_NAME --resource-group $VM_RESOURCE_GROUP &>/dev/null; then
     # Create a Key Vault
@@ -161,14 +147,42 @@ if ! az identity show --name $VM_HOSTNAME-Identity --resource-group $VM_RESOURCE
     echo "## Setting Key Vault policy to allow the VM to access secrets"
     VM_PRINCIPAL_ID=$(az vm show --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --query 'identity.principalId' -o tsv)
     az role assignment create --role "Key Vault Secrets User" --assignee $VM_PRINCIPAL_ID --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$VM_RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/$KEYVAULT_NAME
-    IDENTITY_OBJECT_ID=$(az identity show --name $VM_HOSTNAME-Identity --resource-group $VM_RESOURCE_GROUP --query 'principalId' -o tsv)
-    az role assignment create --role "Key Vault Secrets User" --assignee-object-id $IDENTITY_OBJECT_ID --assignee-principal-type ServicePrincipal --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$VM_RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/$KEYVAULT_NAME
     
+    ## Access rules for th VM Managed Identity
+    echo "## Getting the object ID of the managed identity"
+    IDENTITY_OBJECT_ID=$(az identity show --name $VM_HOSTNAME-Identity --resource-group $VM_RESOURCE_GROUP --query 'principalId' -o tsv)
+
+    echo "## Setting Machine Identity Role access to allow the VM to access KeyVault (Key Vault Reader) via the machine identity"
+    az role assignment create --role "Key Vault Reader" --assignee $VM_PRINCIPAL_ID --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$VM_RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/$KEYVAULT_NAME
+  
+    echo "## Setting Machine Identity Role access to allow the VM to access secrets (Key Vault Secrets Use) via the machine identity"
+    az role assignment create --role "Key Vault Secrets User" --assignee-object-id $IDENTITY_OBJECT_ID --assignee-principal-type ServicePrincipal --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$VM_RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/$KEYVAULT_NAME
+      
     echo "## Allow the VM to acccess azure configure commands via the machine identity"
     az role assignment create --role "Virtual Machine Contributor" --assignee $VM_PRINCIPAL_ID --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$VM_RESOURCE_GROUP/providers/Microsoft.Compute/virtualMachines/$VM_HOSTNAME
 else
     echo "## Managed identity for the VM already exists."
 fi
+
+exit
+
+# Output logs for CustomScript extension
+#  stored in /var/lib/waagent/custom-script/download/0/
+
+# Install VM extension AADLoginForLinux
+echo "## Installing VM extension AADLoginForLinux"
+az vm extension set \
+    --resource-group ${VM_RESOURCE_GROUP} \
+    --vm-name $VM_HOSTNAME \
+    --name AADSSHLoginForLinux \
+    --publisher Microsoft.Azure.ActiveDirectory \
+    --settings '{}'
+echo "## VM extension AADLoginForLinux installed"
+
+# Proceed only if the VM and AADLoginForLinux extension are completed
+echo "## Waiting for the VM and AADLoginForLinux extension to complete"
+az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
+az vm extension wait --resource-group $VM_RESOURCE_GROUP --vm-name $VM_HOSTNAME --name AADSSHLoginForLinux --created
 
 # Install and run SetupHost.sh on the VM
 if [ $SCRIPT_SETUP_HOST = "TRUE" ]; then
@@ -378,6 +392,7 @@ echo "## - guacamolePassword"
 echo "## Managed Identity: $VM_HOSTNAME-Identity"
 echo "## Identity ID: $(az identity show --name $VM_HOSTNAME-Identity --resource-group $VM_RESOURCE_GROUP --query 'id' -o tsv)"
 echo "## Identity Object ID: $(az identity show --name $VM_HOSTNAME-Identity --resource-group $VM_RESOURCE_GROUP --query 'principalId' -o tsv)"
+echo "#####################"
 
 # end of script
 echo "## End of script"
