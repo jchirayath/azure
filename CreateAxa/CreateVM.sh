@@ -361,7 +361,7 @@ if [ $SCRIPT_TAKE_BACKUP = "TRUE" ]; then
         --vm-name $VM_HOSTNAME \
         --name CustomScript \
         --publisher Microsoft.Azure.Extensions \
-        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/TakeBackup.sh"],"commandToExecute":"./TakeBackup.sh"}'
+        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Take_Backup.sh"],"commandToExecute":"./TakeBackup.sh"}'
 
     echo "## Waiting for TakeBackup.sh to complete"
     az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
