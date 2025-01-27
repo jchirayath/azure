@@ -73,12 +73,12 @@ if ! sudo ufw allow 443/tcp; then
     exit 1
 fi
 
-# 8080 - HTTP
-echo "Allowing port 8080/tcp..."
-if ! sudo ufw allow 8080/tcp; then
-    echo "Error: Failed to allow port 8080/tcp"
-    exit 1
-fi
+# # 8080 - HTTP
+# echo "Allowing port 8080/tcp..."
+# if ! sudo ufw allow 8080/tcp; then
+#     echo "Error: Failed to allow port 8080/tcp"
+#     exit 1
+# fi
 
 # 8118 - Privoxy
 echo "Allowing port 8118/tcp..."
