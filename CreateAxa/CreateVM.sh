@@ -164,8 +164,6 @@ else
     echo "## Managed identity for the VM already exists."
 fi
 
-exit
-
 # Output logs for CustomScript extension
 #  stored in /var/lib/waagent/custom-script/download/0/
 
