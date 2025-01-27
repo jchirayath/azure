@@ -80,6 +80,14 @@ fi
 #     exit 1
 # fi
 
+# 8443 - CloudPanel
+echo "Allowing port 8443/tcp..."
+if ! sudo ufw allow 8443/tcp; then
+    echo "Error: Failed to allow port 8443/tcp"
+    exit 1
+fi
+
+
 # 8118 - Privoxy
 echo "Allowing port 8118/tcp..."
 if ! sudo ufw allow 8118/tcp; then
