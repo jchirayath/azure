@@ -8,7 +8,7 @@ sudo apt-get install lynis -y
 
 # ## Run Lynis Security Scanner
 echo "Running Lynis Security Scanner..."
-sudo lynis audit system -Q --no-colors > lynis_report.txt
+sudo lynis audit system -Q --no-colors > /roo/lynis_report.txt
 # cat lynis_report.txt | mail -s "PEN test for Host $$HOSTNAME" "$EMAIL_USER"
 
 # End of Script
