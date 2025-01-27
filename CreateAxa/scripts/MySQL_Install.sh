@@ -62,18 +62,18 @@ fi
 
 # Install MySQL if not already installed
 
-# Check if MySQL is already installed
-echo "## Checking if MySQL is already installed"
-if mysql --version; then
-    echo "MySQL is already installed."
+# Check if MySQL server is already installed
+echo "## Checking if MySQL server is already installed"
+if dpkg-query -W -f='${Status}' mysql-server 2>/dev/null | grep -q "ok installed"; then
+    echo "MySQL server is already installed."
 else
-    echo "MySQL is not installed."
-    # Install MySQL
-    echo "Installing MySQL..."
+    echo "MySQL server is not installed."
+    # Install MySQL server
+    echo "Installing MySQL server..."
     if sudo apt-get install mysql-server -y; then
-        echo "MySQL installation succeeded."
+        echo "MySQL server installation succeeded."
     else
-        echo "MySQL installation failed."
+        echo "MySQL server installation failed."
         exit 1
     fi  
 fi
