@@ -353,15 +353,15 @@ else
     echo "## Skipping LynisInstall.sh"
 fi
 
-# Install and run TakeBackup.sh on the VM
+# Install and run Take_Backup.sh on the VM
 if [ $SCRIPT_TAKE_BACKUP = "TRUE" ]; then
-    echo "## Installing TakeBackup.sh"
+    echo "## Installing Take_Backup.sh"
     az vm extension set \
         --resource-group ${VM_RESOURCE_GROUP} \
         --vm-name $VM_HOSTNAME \
         --name CustomScript \
         --publisher Microsoft.Azure.Extensions \
-        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Take_Backup.sh"],"commandToExecute":"./TakeBackup.sh"}'
+        --settings '{"fileUris":["https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/scripts/Take_Backup.sh"],"commandToExecute":"./Take_Backup.sh"}'
 
     echo "## Waiting for TakeBackup.sh to complete"
     az vm wait --resource-group $VM_RESOURCE_GROUP --name $VM_HOSTNAME --created
