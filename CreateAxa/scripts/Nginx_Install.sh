@@ -104,6 +104,54 @@ server {
         proxy_set_header Connection \$http_connection;
         access_log off;
     }
+
+    # Proxy /kibana to Kibana (localhost:5601)
+    location /kibana/ {
+        proxy_pass http://localhost:5601/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    # Proxy /grafana to Grafana (localhost:3000)
+    location /grafana/ {
+        proxy_pass http://localhost:3000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Proxy /prometheus to Prometheus (localhost:9090)
+    location /prometheus/ {
+        proxy_pass http://localhost:9090/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Proxy /portainer to Portainer (localhost:9000)
+    location /portainer/ {
+        proxy_pass http://localhost:9000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Proxy /phpmyadmin to phpMyAdmin (localhost:8081)
+    location /phpmyadmin/ {
+        proxy_pass http://localhost:8081/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 }
 EOF
     then
