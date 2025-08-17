@@ -51,7 +51,7 @@ This script configures KnockD to dynamically manage UFW (Uncomplicated Firewall)
 All actions are logged via syslog. The configuration ensures that only the IP that performed the correct knock sequence is granted temporary access.
 '
 # Configure KnockD using UFW
-echo "Configuring KnockD..."
+echo "Configuring KnockD with default configuration..."
 if ! sudo tee /etc/knockd.conf > /dev/null <<EOF
 [options]
     UseSyslog
@@ -59,39 +59,13 @@ if ! sudo tee /etc/knockd.conf > /dev/null <<EOF
 [openSSH]
     sequence    = 7000,8000,9000
     seq_timeout = 5
-    command     = /usr/sbin/ufw allow from %IP% to any port 22 proto tcp; \
-                  /usr/sbin/ufw allow from %IP% to any port 8118 proto tcp; \
-                  /usr/sbin/ufw allow from %IP% to any port 8080 proto tcp; \
-                  /usr/sbin/ufw allow from %IP% to any port 5601 proto tcp; \
-                  /usr/sbin/ufw allow from %IP% to any port 9090 proto tcp; \
-                  /usr/sbin/ufw allow from %IP% to any port 3000 proto tcp; \
-                  /usr/sbin/ufw allow from %IP% to any port 1000 proto tcp; \
-                  /usr/sbin/ufw allow from %IP% to any port 8081 proto tcp; \
-                  /usr/sbin/ufw allow from %IP% to any port 8084 proto tcp; \
-                  (sleep 28800; \
-                   /usr/sbin/ufw delete allow from %IP% to any port 22 proto tcp; \
-                   /usr/sbin/ufw delete allow from %IP% to any port 8118 proto tcp; \
-                   /usr/sbin/ufw delete allow from %IP% to any port 8080 proto tcp; \
-                   /usr/sbin/ufw delete allow from %IP% to any port 5601 proto tcp; \
-                   /usr/sbin/ufw delete allow from %IP% to any port 9090 proto tcp; \
-                   /usr/sbin/ufw delete allow from %IP% to any port 3000 proto tcp; \
-                   /usr/sbin/ufw delete allow from %IP% to any port 1000 proto tcp; \
-                   /usr/sbin/ufw delete allow from %IP% to any port 8081 proto tcp; \
-                   /usr/sbin/ufw delete allow from %IP% to any port 8084 proto tcp) &    # Remove after 8 hours (28800 seconds)
+    command     = /usr/sbin/ufw allow from %IP% to any port 22,8118,8080,5601,9090,3000,1000,8081,8084 proto tcp comment 'KnockD open'
     tcpflags    = syn
 
 [closeSSH]
     sequence    = 9000,8000,7000
     seq_timeout = 5
-    command     = /usr/sbin/ufw delete allow from %IP% to any port 22 proto tcp; \
-                  /usr/sbin/ufw delete allow from %IP% to any port 8118 proto tcp; \
-                  /usr/sbin/ufw delete allow from %IP% to any port 8080 proto tcp; \
-                  /usr/sbin/ufw delete allow from %IP% to any port 5601 proto tcp; \
-                  /usr/sbin/ufw delete allow from %IP% to any port 9090 proto tcp; \
-                  /usr/sbin/ufw delete allow from %IP% to any port 3000 proto tcp; \
-                  /usr/sbin/ufw delete allow from %IP% to any port 1000 proto tcp; \
-                  /usr/sbin/ufw delete allow from %IP% to any port 8081 proto tcp; \
-                  /usr/sbin/ufw delete allow from %IP% to any port 8084 proto tcp
+    command     = /usr/sbin/ufw delete allow from %IP% to any port 22,8118,8080,5601,9090,3000,1000,8081,8084 proto tcp
     tcpflags    = syn
 EOF
 then
