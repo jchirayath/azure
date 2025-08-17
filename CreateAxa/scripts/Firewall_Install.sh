@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Register application with UFW
+# Register SSH application with UFW
 echo "Setting up firewall..."
 sudo ufw allow OpenSSH
 if [ $? -ne 0 ]; then
@@ -81,12 +81,11 @@ fi
 # fi
 
 # 8443 - CloudPanel
-echo "Allowing port 8443/tcp..."
-if ! sudo ufw allow 8443/tcp; then
-    echo "Error: Failed to allow port 8443/tcp"
-    exit 1
-fi
-
+# echo "Allowing port 8443/tcp..."
+# if ! sudo ufw allow 8443/tcp; then
+#     echo "Error: Failed to allow port 8443/tcp"
+#     exit 1
+# fi
 
 # 8118 - Privoxy
 echo "Allowing port 8118/tcp..."

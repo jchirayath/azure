@@ -10,7 +10,34 @@ fi
 
 echo "Configuring Privoxy..."
 sudo cp /etc/privoxy/config /etc/privoxy/config.backup
-sudo sed -i 's/^listen-address  localhost:8118/listen-address  0.0.0.0:8118/' /etc/privoxy/config
+sudo sed -i 's/^listen-address  127.0.0.1:8118/listen-address  0.0.0.0:8118/' /etc/privoxy/config
+
+# Allow external access by updating the 'listen-address' and 'permit-access' settings
+sudo sed -i '/^#* *permit-access /d' /etc/privoxy/config
+echo "permit-access 0.0.0.0" | sudo tee -a /etc/privoxy/config > /dev/null
+
+# Restrict access to Zscaler IP ranges only for security
+# List of Zscaler IP ranges (example, update as needed)
+ZSCALER_IP_RANGES=(
+    "185.46.212.0/22"
+    "185.46.216.0/22"
+    "185.46.220.0/22"
+    "185.46.224.0/22"
+    "185.46.228.0/22"
+    "185.46.232.0/22"
+    "185.46.236.0/22"
+    "185.46.240.0/22"
+    # Add more Zscaler IP ranges as needed
+)
+
+for ip_range in "${ZSCALER_IP_RANGES[@]}"; do
+    echo "permit-access $ip_range" | sudo tee -a /etc/privoxy/config > /dev/null
+done
+
+# Enable debug logging for troubleshooting
+if ! grep -q '^debug 1' /etc/privoxy/config; then
+    echo "debug 1" | sudo tee -a /etc/privoxy/config > /dev/null
+fi
 
 # Restart Privoxy
 echo "Restarting Privoxy..."
