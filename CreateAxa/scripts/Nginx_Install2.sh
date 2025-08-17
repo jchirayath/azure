@@ -60,13 +60,19 @@ server {
     # Proxy /kibana to Kibana (localhost:5601)
     location /kibana/ {
         proxy_pass http://localhost:5601/;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+        proxy_redirect off;
+        proxy_cookie_path / /kibana/;
+        sub_filter_types text/html text/javascript application/javascript;
+        sub_filter_once off;
+        sub_filter 'href="/' 'href="/kibana/';
+        sub_filter 'src="/' 'src="/kibana/';
     }
 
     # Proxy /grafana to Grafana (localhost:3000)
