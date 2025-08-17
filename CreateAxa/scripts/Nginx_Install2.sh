@@ -106,6 +106,14 @@ server {
     }
 }
 EOF
+
+# Download the new index.html from the provided URL
+echo "Downloading the new index.html..."
+if ! sudo curl -o /var/www/html/index.html https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/files/index.html; then
+    echo "Failed to download the new index.html"
+    exit 1
+fi
+
 }
 
 if $CONFIG_ONLY; then
@@ -156,13 +164,6 @@ if [ -f /var/www/html/index.html ]; then
         echo "Failed to backup the original index.html"
         exit 1
     fi
-fi
-
-# Download the new index.html from the provided URL
-echo "Downloading the new index.html..."
-if ! sudo curl -o /var/www/html/index.html https://raw.githubusercontent.com/jchirayath/azure/master/CreateAxa/files/index.html; then
-    echo "Failed to download the new index.html"
-    exit 1
 fi
 
 # Link the Apache2 icons directory to the Nginx web root

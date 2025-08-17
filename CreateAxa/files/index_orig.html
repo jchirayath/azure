@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Troubleshooting and Monitoring Tools</title>
+    <style>
+        body {
+            background-color: black;
+            color: green;
+            font-family: Arial, sans-serif;
+        }
+        header {
+            text-align: center;
+            padding: 10px;
+            position: relative;
+        }
+        header img {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 50px; /* Adjust the size as needed */
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+        }
+        .disclaimer {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .links {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .links a {
+            color: green;
+            text-decoration: none;
+            display: block;
+            margin: 5px 0;
+        }
+        h1, h2 {
+            color: #32CD32; /* Different green shade */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="icons/ubuntu-logo.png" alt="Ubuntu Logo">
+        <h1>Comprehensive Troubleshooting and Monitoring Tools</h1>
+    </header>
+    <div class="links">
+        <h2>Service Links</h2>
+        <a href="/guacamole/">Guacamole - Remote desktop gateway - 8080</a>
+        <a href="/privoxy">Privoxy - Non-caching web proxy - 8118</a>
+        <a href="/webmin">Webmin - System administration - 1000</a>
+        <a href="/kibana">Kibana - Elasticsearch visualization - 5601</a>
+        <a href="/grafana">Grafana - Data visualization and monitoring - 3000</a>
+        <a href="/prometheus">Prometheus - Monitoring and alerting toolkit- 9090</a>
+        <a href="/portainer">Portainer - Docker container management - 8081</a>
+        <a href="/phpmyadmin">phpMyAdmin - MySQL database management - 8084</a>
+        <a href="To be Setup">To Be Setup</a>
+        <a href="http://localhost:8083/">Netdata - Real-time system monitoring</a>
+        <a href="http://localhost:8085/">Adminer - Database management</a>
+        <a href="http://localhost:8086/">Cockpit - Server monitoring and management</a>
+        <a href="http://localhost:8091/">Jupyter - Data science and machine learning</a>
+        <a href="http://localhost:8098/">Graylog - Log management and analysis</a>
+        <a href="http://localhost:8099/">Jenkins X - Cloud-native CI/CD</a>
+        <a href="http://localhost:8100/">Kubeapps - Kubernetes application dashboard</a>
+        <a href="http://localhost:8101/">Kubernetes Dashboard - Web-based Kubernetes user interface</a>
+        <a href="http://localhost:8102/">Portus - Docker image registry authentication</a>
+        <a href="http://localhost:8103/">Rancher - Kubernetes management</a>
+        <a href="http://localhost:8104/">Traefik - Cloud-native edge router</a>
+        <a href="http://localhost:8105/">Vault - Secrets management</a>
+        <a href="http://localhost:8106/">WebSSH - Web-based SSH client</a>
+
+        <h2>DNS and Email Troubleshooting Tools</h2>
+        <a href="https://dnschecker.org/">DNSChecker - Checks DNS propagation globally. Verifies A, MX, TXT, and other DNS record types.</a>
+        <a href="https://intodns.com/">IntoDNS - Performs a full DNS health report. Highlights configuration and delegation errors.</a>
+        <a href="https://www.mail-tester.com/">Mail Tester - Tests email server configurations. Identifies spam score, blacklisting, and SPF/DKIM issues.</a>
+        <a href="https://mxtoolbox.com/">MxToolbox - Offers email, DNS, and blacklist monitoring. Includes SMTP diagnostics and email delivery troubleshooting.</a>
+
+        <h2>Website and Server Monitoring</h2>
+        <a href="https://www.pingdom.com/">Pingdom - Provides uptime and performance monitoring. Real-time insights into server responsiveness.</a>
+        <a href="https://gtmetrix.com/">GTmetrix - Analyzes website speed and performance. Provides detailed recommendations for optimization.</a>
+        <a href="https://uptimerobot.com/">UptimeRobot - Monitors website and server uptime. Alerts for downtime or response time degradation.</a>
+        <a href="https://www.websiteplanet.com/webtools/ssl-checker/">Website Planet's SSL Checker - Tests SSL/TLS certificate validity and configuration. Checks for expiry, chain issues, and protocol compliance.</a>
+
+        <h2>Security Analysis</h2>
+        <a href="https://www.ssllabs.com/ssltest/">SSL Labs - Tests SSL/TLS configurations for web servers. Provides a security grading system.</a>
+        <a href="https://sitecheck.sucuri.net/">Sucuri SiteCheck - Scans for malware, vulnerabilities, and blacklisting. Checks website security configurations.</a>
+        <a href="https://securityheaders.com/">SecurityHeaders - Analyzes HTTP headers for security best practices. Evaluates CSP, XSS protection, and HSTS policies.</a>
+
+        <h2>Network Troubleshooting</h2>
+        <a href="https://whatismyipaddress.com/">WhatIsMyIP - Checks public IP addresses and geolocation. Includes tools for blacklist checks and proxy detection.</a>
+        <a href="https://www.dnsperf.com/">DNSPerf - Measures DNS performance for various providers. Compares query speeds and global response times.</a>
+        <a href="https://www.yougetsignal.com/tools/">YouGetSignal - Offers tools like port checkers, reverse IP lookup, and traceroutes.</a>
+        <a href="https://pingtool.org/">PingTool - Online ping, traceroute, and DNS resolution tests. Useful for latency and connectivity analysis.</a>
+
+        <h2>Email Deliverability Tools</h2>
+        <a href="https://glockapps.com/">GlockApps - Tests email deliverability and spam placement. Analyzes SPF, DKIM, DMARC, and IP reputation.</
+        <a href="https://mxtoolbox.com/blacklists.aspx">MxToolbox Email Blacklist - Checks IP and domain blacklisting status. Monitors DNSBL and RBL listings.</a>
+    
+        <h2>Domain Management Tools</h2>
+        <a href="https://www.namecheap.com/domains/domain-name-search/">Namecheap Domain Search - Register and manage domain names.</a>
+        <a href="https://domains.google/">Google Domains - Domain registration and management.</a>
+        <a href="https://www.godaddy.com/domains/domain-name-search">GoDaddy Domain Search - Domain registration and DNS management.</a>
+        <a href="https://www.cloudflare.com/products/registrar/">Cloudflare Registrar - Secure domain registration and DNS management.</a>
+        <a href="https://porkbun.com/">Porkbun - Affordable domain registration and management.</a>
+        <a href="https://www.hover.com/">Hover - Simple domain registration and management.</a>
+        <a href="https://manage.opensrs.com/">OpenSRS Management Portal - Manage domains registered through OpenSRS.</a>
+        <a href="https://resellers.opensrs.com/">OpenSRS Reseller Portal - Access for OpenSRS resellers to manage domains and services.</a>
+    
+        <h2>Certificate Management Tools</h2>
+        <a href="https://letsencrypt.org/getting-started/">Let's Encrypt - Free, automated, and open certificate authority.</a>
+        <a href="https://www.ssl.com/">SSL.com - SSL/TLS certificates and management tools.</a>
+        <a href="https://www.digicert.com/">DigiCert - Certificate management and automation solutions.</a>
+        <a href="https://certbot.eff.org/">Certbot - Tool to automate the installation and renewal of Let's Encrypt certificates.</a>
+        <a href="https://www.ssllabs.com/ssltest/">SSL Labs Test - Analyze SSL certificate deployment and configuration.</a>
+        <a href="https://crt.sh/">crt.sh - Certificate Transparency log search tool.</a>
+        <a href="https://www.globalsign.com/en/ssl/">GlobalSign - SSL certificates and certificate management platform.</a>
+    
+        <h2>Cryptography Tools</h2>
+        <a href="https://www.cryptool.org/en/cto/">CrypTool Online - Interactive cryptography learning and analysis platform.</a>
+        <a href="https://gchq.github.io/CyberChef/">CyberChef - Web app for encryption, encoding, compression, and data analysis.</a>
+        <a href="https://www.tools4noobs.com/online_tools/decrypt/">Tools4Noobs Decrypt/Encrypt - Online tool for various encryption and decryption algorithms.</a>
+        <a href="https://www.base64decode.org/">Base64 Decode/Encode - Encode or decode data in Base64 format.</a>
+        <a href="https://www.md5hashgenerator.com/">MD5 Hash Generator - Generate MD5 hashes for strings and files.</a>
+        <a href="https://passwordsgenerator.net/md5-hash-generator/">SHA Hash Generator - Generate SHA-1, SHA-256, and SHA-512 hashes.</a>
+        <a href="https://www.random.org/passwords/">Random.org Password Generator - Generate secure random passwords.</a>
+        <a href="https://www.lastpass.com/password-generator">LastPass Password Generator - Create strong, random passwords online.</a>
+    
+        <h2>JWT and SAML Debugging and Management Tools</h2>
+        <a href="https://jwt.io/">JWT.io - Decode, verify, and generate JSON Web Tokens (JWTs).</a>
+        <a href="https://token.dev/">Token.dev - Inspect, decode, and debug JWT, OAuth, and OpenID tokens.</a>
+        <a href="https://www.jsonwebtoken.io/">JSON Web Token Debugger - Online JWT decoder and validator.</a>
+        <a href="https://www.samltool.com/">SAMLTool - Online SAML request, response, and assertion decoder and validator.</a>
+        <a href="https://www.samltester.com/">SAMLTester - Test and debug SAML authentication flows.</a>
+        <a href="https://www.samlxml.com/">SAML XML - Decode, encode, and validate SAML messages.</a>
+    
+        <h2>Miscellaneous Internet Testing Tools</h2>
+        <a href="https://speedtest.net/">Speedtest by Ookla - Test your internet connection speed.</a>
+        <a href="https://browserleaks.com/">BrowserLeaks - Analyze browser fingerprinting and privacy leaks.</a>
+        <a href="https://ipleak.net/">IPLeak.net - Check for IP, DNS, and WebRTC leaks.</a>
+        <a href="https://test-ipv6.com/">Test IPv6 - Test your IPv6 connectivity and browser support.</a>
+        <a href="https://whoer.net/">Whoer.net - Check your IP, anonymity, and browser information.</a>
+        <a href="https://www.geopeeker.com/">GeoPeeker - View your website from different geographic locations.</a>
+        <a href="https://www.ssllabs.com/ssltest/viewMyClient.html">SSL Labs Client Test - Test your browser's SSL/TLS capabilities.</a>
+        <a href="https://www.whatsmydns.net/">What's My DNS - Check DNS propagation for a domain.</a>
+        <a href="https://www.webpagetest.org/">WebPageTest - Website performance and optimization test from multiple locations.</a>
+        <a href="https://www.ping.eu/">Ping.eu - Collection of network tools: ping, traceroute, WHOIS, DNS, etc.</a>
+    
+        <h2>BGP and Routing Testing Tools</h2>
+        <a href="https://bgp.he.net/">Hurricane Electric BGP Toolkit - View BGP routes, prefixes, and ASN information.</a>
+        <a href="https://www.bgpview.io/">BGPView - Lookup ASNs, prefixes, and peers. Visualize BGP routing tables.</a>
+        <a href="https://www.bgpmon.io/">BGPMon - Monitor BGP routes and detect route hijacks or leaks.</a>
+        <a href="https://stat.ripe.net/">RIPEstat - Analyze BGP routing, ASN, and IP address information.</a>
+        <a href="https://www.routeviews.org/">RouteViews - Access real-time and historical BGP routing data from multiple vantage points.</a>
+        <a href="https://lookingglass.ripe.net/">RIPE NCC Looking Glass - Query BGP and routing information from RIPE routers.</a>
+        <a href="https://lg.he.net/">Hurricane Electric Looking Glass - Run BGP, traceroute, and ping queries from multiple locations.</a>
+        <a href="https://www.peeringdb.com/">PeeringDB - Database of networks, exchanges, and facilities for interconnection and routing.</a>
+        <a href="https://radar.qrator.net/">Qrator Radar - BGP route monitoring and analytics platform.</a>
+        <a href="https://www.bgp.tools/">BGP.Tools - Visualize BGP announcements, withdrawals, and routing changes.</a>
+    </div>
+    <footer>
+        <p>&copy; 2023 Your Company. All rights reserved.</p>
+    </footer>
+    <div class="disclaimer">
+        <p>Disclaimer: The tools and resources listed on this page are provided for informational purposes only. Use them at your own risk. We do not guarantee the accuracy, reliability, or completeness of any information provided. Always exercise caution and perform your own due diligence before using any online tools or services.</p>
+    </div>
+</body>
+</html>a>
