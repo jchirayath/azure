@@ -28,8 +28,29 @@ echo "Installing KnockD..."
 if ! sudo apt-get install knockd -y; then
     error_exit "Failed to install KnockD"
 fi
+: '
+# KnockD UFW Configuration Script
 
-# Configure KnockD
+This script configures KnockD to dynamically manage UFW (Uncomplicated Firewall) rules based on port knocking sequences. When the correct sequence is received, UFW rules are temporarily added to allow access from the knocking IP to specific ports, and then removed after a timeout or upon receiving a closing sequence.
+
+## Port Descriptions:
+- **22**: SSH (Secure Shell) - Remote server administration.
+- **8118**: Privoxy - Non-caching web proxy.
+- **8080**: Alternative HTTP port - Often used for web servers or proxies.
+- **5601**: Kibana - Web interface for Elasticsearch.
+- **9090**: Prometheus - Monitoring system and time series database.
+- **3000**: Grafana - Analytics and monitoring dashboard.
+- **1000**: Custom/Reserved - Not a standard service, used as per local requirements.
+- **8081**: Alternative HTTP port - Often used for web servers or proxies.
+- **8084**: Alternative HTTP port - Often used for web servers or proxies.
+
+## KnockD Sequences:
+- **openSSH**: Sequence `7000,8000,9000` opens the above ports for the knocking IP for 8 hours (28800 seconds).
+- **closeSSH**: Sequence `9000,8000,7000` immediately closes the above ports for the knocking IP.
+
+All actions are logged via syslog. The configuration ensures that only the IP that performed the correct knock sequence is granted temporary access.
+'
+# Configure KnockD using UFW
 echo "Configuring KnockD..."
 if ! sudo tee /etc/knockd.conf > /dev/null <<EOF
 [options]
@@ -38,39 +59,39 @@ if ! sudo tee /etc/knockd.conf > /dev/null <<EOF
 [openSSH]
     sequence    = 7000,8000,9000
     seq_timeout = 5
-    command     = /usr/sbin/iptables -A INPUT -s %IP% -p tcp --dport 22 -j ACCEPT; \
-                  /usr/sbin/iptables -A INPUT -s %IP% -p tcp --dport 8118 -j ACCEPT; \
-                  /usr/sbin/iptables -A INPUT -s %IP% -p tcp --dport 8080 -j ACCEPT; \
-                  /usr/sbin/iptables -A INPUT -s %IP% -p tcp --dport 5601 -j ACCEPT; \
-                  /usr/sbin/iptables -A INPUT -s %IP% -p tcp --dport 9090 -j ACCEPT; \
-                  /usr/sbin/iptables -A INPUT -s %IP% -p tcp --dport 3000 -j ACCEPT; \
-                  /usr/sbin/iptables -A INPUT -s %IP% -p tcp --dport 1000 -j ACCEPT; \
-                  /usr/sbin/iptables -A INPUT -s %IP% -p tcp --dport 8081 -j ACCEPT; \
-                  /usr/sbin/iptables -A INPUT -s %IP% -p tcp --dport 8084 -j ACCEPT; \
+    command     = /usr/sbin/ufw allow from %IP% to any port 22 proto tcp; \
+                  /usr/sbin/ufw allow from %IP% to any port 8118 proto tcp; \
+                  /usr/sbin/ufw allow from %IP% to any port 8080 proto tcp; \
+                  /usr/sbin/ufw allow from %IP% to any port 5601 proto tcp; \
+                  /usr/sbin/ufw allow from %IP% to any port 9090 proto tcp; \
+                  /usr/sbin/ufw allow from %IP% to any port 3000 proto tcp; \
+                  /usr/sbin/ufw allow from %IP% to any port 1000 proto tcp; \
+                  /usr/sbin/ufw allow from %IP% to any port 8081 proto tcp; \
+                  /usr/sbin/ufw allow from %IP% to any port 8084 proto tcp; \
                   (sleep 28800; \
-                   /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 22 -j ACCEPT; \
-                   /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 8118 -j ACCEPT; \
-                   /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 8080 -j ACCEPT; \
-                   /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 5601 -j ACCEPT; \
-                   /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 9090 -j ACCEPT; \
-                   /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 3000 -j ACCEPT; \
-                   /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 1000 -j ACCEPT; \
-                   /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 8081 -j ACCEPT; \
-                   /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 8084 -j ACCEPT) &    # Remove after 8 hours (28800 seconds)
+                   /usr/sbin/ufw delete allow from %IP% to any port 22 proto tcp; \
+                   /usr/sbin/ufw delete allow from %IP% to any port 8118 proto tcp; \
+                   /usr/sbin/ufw delete allow from %IP% to any port 8080 proto tcp; \
+                   /usr/sbin/ufw delete allow from %IP% to any port 5601 proto tcp; \
+                   /usr/sbin/ufw delete allow from %IP% to any port 9090 proto tcp; \
+                   /usr/sbin/ufw delete allow from %IP% to any port 3000 proto tcp; \
+                   /usr/sbin/ufw delete allow from %IP% to any port 1000 proto tcp; \
+                   /usr/sbin/ufw delete allow from %IP% to any port 8081 proto tcp; \
+                   /usr/sbin/ufw delete allow from %IP% to any port 8084 proto tcp) &    # Remove after 8 hours (28800 seconds)
     tcpflags    = syn
 
 [closeSSH]
     sequence    = 9000,8000,7000
     seq_timeout = 5
-    command     = /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 22 -j ACCEPT; \
-                  /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 8118 -j ACCEPT; \
-                  /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 8080 -j ACCEPT; \
-                  /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 5601 -j ACCEPT; \
-                  /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 9090 -j ACCEPT; \
-                  /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 3000 -j ACCEPT; \
-                  /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 1000 -j ACCEPT; \
-                  /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 8081 -j ACCEPT; \
-                  /usr/sbin/iptables -D INPUT -s %IP% -p tcp --dport 8084 -j ACCEPT
+    command     = /usr/sbin/ufw delete allow from %IP% to any port 22 proto tcp; \
+                  /usr/sbin/ufw delete allow from %IP% to any port 8118 proto tcp; \
+                  /usr/sbin/ufw delete allow from %IP% to any port 8080 proto tcp; \
+                  /usr/sbin/ufw delete allow from %IP% to any port 5601 proto tcp; \
+                  /usr/sbin/ufw delete allow from %IP% to any port 9090 proto tcp; \
+                  /usr/sbin/ufw delete allow from %IP% to any port 3000 proto tcp; \
+                  /usr/sbin/ufw delete allow from %IP% to any port 1000 proto tcp; \
+                  /usr/sbin/ufw delete allow from %IP% to any port 8081 proto tcp; \
+                  /usr/sbin/ufw delete allow from %IP% to any port 8084 proto tcp
     tcpflags    = syn
 EOF
 then
