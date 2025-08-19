@@ -60,13 +60,13 @@ if ! sudo tee /etc/knockd.conf > /dev/null <<EOF
 [openSSH]
     sequence    = 7000,8000,9000
     seq_timeout = 5
-    command     = /usr/sbin/ufw allow from %IP% to any port 22,8118,8080,5601,9090,3000,1000,8081,8084 proto tcp comment 'KnockD open'
+    command     = /usr/sbin/ufw allow from %IP% to any port 22,8118,8080,5601,9090,3000,10000,8081,8084 proto tcp comment 'KnockD open'
     tcpflags    = syn
 
 [closeSSH]
     sequence    = 9000,8000,7000
     seq_timeout = 5
-    command     = /usr/sbin/ufw delete allow from %IP% to any port 22,8118,8080,5601,9090,3000,1000,8081,8084 proto tcp
+    command     = /usr/sbin/ufw delete allow from %IP% to any port 22,8118,8080,5601,9090,3000,10000,8081,8084 proto tcp
     tcpflags    = syn
 EOF
 then
