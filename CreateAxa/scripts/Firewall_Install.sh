@@ -59,19 +59,19 @@ if ! sudo ufw allow 993/tcp; then
     exit 1
 fi
 
-# 80 - HTTP
-echo "Allowing port 80/tcp..."
-if ! sudo ufw allow 80/tcp; then
-    echo "Error: Failed to allow port 80/tcp"
-    exit 1
-fi
+# # 80 - HTTP
+# echo "Allowing port 80/tcp..."
+# if ! sudo ufw allow 80/tcp; then
+#     echo "Error: Failed to allow port 80/tcp"
+#     exit 1
+# fi
 
 # 443 - HTTPS
-echo "Allowing port 443/tcp..."
-if ! sudo ufw allow 443/tcp; then
-    echo "Error: Failed to allow port 443/tcp"
-    exit 1
-fi
+# echo "Allowing port 443/tcp..."
+# if ! sudo ufw allow 443/tcp; then
+#     echo "Error: Failed to allow port 443/tcp"
+#     exit 1
+# fi
 
 # # 8080 - HTTP
 # echo "Allowing port 8080/tcp..."

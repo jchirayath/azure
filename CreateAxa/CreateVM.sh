@@ -44,10 +44,15 @@ if ! az network public-ip show --resource-group $VM_RESOURCE_GROUP --name ${VM_H
     az network nsg rule create --resource-group $VM_RESOURCE_GROUP --nsg-name ${VM_HOSTNAME}-nsg --name AllowSSH --protocol tcp --priority 1000 --destination-port-range 22 --access allow
     az network nsg rule create --resource-group $VM_RESOURCE_GROUP --nsg-name ${VM_HOSTNAME}-nsg --name AllowHTTP --protocol tcp --priority 1010 --destination-port-range 80 --access allow
     az network nsg rule create --resource-group $VM_RESOURCE_GROUP --nsg-name ${VM_HOSTNAME}-nsg --name AllowHTTPS --protocol tcp --priority 1020 --destination-port-range 443 --access allow
-    # az network nsg rule create --resource-group $VM_RESOURCE_GROUP --nsg-name ${VM_HOSTNAME}-nsg --name Allow8080 --protocol tcp --priority 1030 --destination-port-range 8080 --access allow
-    az network nsg rule create --resource-group $VM_RESOURCE_GROUP --nsg-name ${VM_HOSTNAME}-nsg --name Allow8443 --protocol tcp --priority 1030 --destination-port-range 8443  --access allow
-    az network nsg rule create --resource-group $VM_RESOURCE_GROUP --nsg-name ${VM_HOSTNAME}-nsg --name Allow8118 --protocol tcp --priority 1050 --destination-port-range 8118 --access allow
-    az network nsg rule create --resource-group $VM_RESOURCE_GROUP --nsg-name ${VM_HOSTNAME}-nsg --name Allow143 --protocol tcp --priority 1060 --destination-port-range 1000 --access allow
+    az network nsg rule create --resource-group $VM_RESOURCE_GROUP --nsg-name ${VM_HOSTNAME}-nsg --name Guacamole --protocol tcp --priority 1030 --destination-port-range 8080 --access allow
+    az network nsg rule create --resource-group $VM_RESOURCE_GROUP --nsg-name ${VM_HOSTNAME}-nsg --name Allow8443 --protocol tcp --priority 1040 --destination-port-range 8443  --access allow
+    az network nsg rule create --resource-group $VM_RESOURCE_GROUP --nsg-name ${VM_HOSTNAME}-nsg --name Privoxy --protocol tcp --priority 1050 --destination-port-range 8118 --access allow
+    az network nsg rule create --resource-group $VM_RESOURCE_GROUP --nsg-name ${VM_HOSTNAME}-nsg --name Webmin --protocol tcp --priority 1060 --destination-port-range 1000 --access allow
+    az network nsg rule create --resource-group $VM_RESOURCE_GROUP --nsg-name ${VM_HOSTNAME}-nsg --name ELKStack --protocol tcp --priority 1070 --destination-port-ranges 5601 9090 3000 --access allow
+    az network nsg rule create --resource-group $VM_RESOURCE_GROUP --nsg-name ${VM_HOSTNAME}-nsg --name Portainer --protocol tcp --priority 1080 --destination-port-range 8081 --access allow
+    az network nsg rule create --resource-group $VM_RESOURCE_GROUP --nsg-name ${VM_HOSTNAME}-nsg --name phpAdmin --protocol tcp --priority 1090 --destination-port-range 8084 --access allow
+    az network nsg rule create --resource-group $VM_RESOURCE_GROUP --nsg-name ${VM_HOSTNAME}-nsg --name Mail --protocol tcp --priority 1100 --destination-port-ranges 25 587 465 143 993 --access allow
+    az network nsg rule create --resource-group $VM_RESOURCE_GROUP --nsg-name ${VM_HOSTNAME}-nsg --name Knockd --protocol tcp --priority 1110 --destination-port-ranges 7000 8000 9000 --access allow
 else
     echo "## DNS name ${VM_HOSTNAME} already exists."
 fi
