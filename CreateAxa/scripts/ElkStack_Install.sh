@@ -29,6 +29,11 @@ sudo systemctl start logstash
 # --- Install Kibana ---
 echo "Installing Kibana..."
 sudo apt-get install -y kibana
+# Allow remote hosts to access Kibana
+sudo sed -i "s|#server.host: \"localhost\"|server.host: \"0.0.0.0\"|g" /etc/kibana/kibana.yml
+sudo systemctl enable kibana
+sudo systemctl start kibana
+
 sudo systemctl enable kibana
 sudo systemctl start kibana
 

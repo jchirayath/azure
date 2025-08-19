@@ -54,7 +54,8 @@ All actions are logged via syslog. The configuration ensures that only the IP th
 echo "Configuring KnockD with default configuration..."
 if ! sudo tee /etc/knockd.conf > /dev/null <<EOF
 [options]
-    UseSyslog
+    logfile = /var/log/knockd.log
+    interface = any
 
 [openSSH]
     sequence    = 7000,8000,9000
