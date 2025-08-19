@@ -7,7 +7,7 @@ sudo apt-get update
 sudo apt-get install -y wget apt-transport-https software-properties-common
 
 # Add Webmin repository and GPG key (modern method)
-wget -qO- https://download.webmin.com/jcameron-key.asc | sudo tee /usr/share/keyrings/webmin.gpg > /dev/null
+wget -qO- https://download.webmin.com/jcameron-key.asc | gpg --dearmor | sudo tee /usr/share/keyrings/webmin.gpg > /dev/null
 echo "deb [signed-by=/usr/share/keyrings/webmin.gpg] https://download.webmin.com/download/repository sarge contrib" | sudo tee /etc/apt/sources.list.d/webmin.list
 
 # Update package lists again
