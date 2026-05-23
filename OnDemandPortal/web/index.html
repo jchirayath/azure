@@ -58,11 +58,13 @@
       <div class="state"><span class="dot" id="dot"></span><span id="state">checking…</span></div>
       <div class="sub" id="sub">on-demand VM · auto-stops when idle</div>
     </div>
-    <button class="start" id="btnStart" disabled>Start</button>
-    <button class="stop"  id="btnStop"  disabled>Stop</button>
+    <button class="start"  id="btnDeploy"  disabled>Deploy</button>
+    <button class="start"  id="btnStart"   disabled>Start</button>
+    <button class="stop"   id="btnStop"    disabled>Stop</button>
+    <button id="btnDestroy" disabled style="background:#b91c1c;color:#fff">Destroy</button>
     <a class="btn manage" href="/vm">Open VM Manager →</a>
   </div>
-  <div class="muted">Full controls (deploy, destroy, connect, services, keep-running hold) are on the VM Manager.</div>
+  <div class="muted">Connect, services, and the keep-running hold are on the VM Manager.</div>
 
   <h2>🖥️ Azure Virtual Desktop <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.7">(Windows session host)</span></h2>
   <div class="vm" id="avdCard">
@@ -287,8 +289,10 @@
     let poll = null;
     function paintButtons(state) {
       const busy = ["deploying","deallocating","starting"].includes(state);
-      $("btnStart").disabled = busy || !["deallocated","stopped"].includes(state);
-      $("btnStop").disabled  = busy || state !== "running";
+      $("btnDeploy").disabled  = busy || state !== "down";                       // create only when nothing exists
+      $("btnStart").disabled   = busy || !["deallocated","stopped"].includes(state);
+      $("btnStop").disabled    = busy || state !== "running";
+      $("btnDestroy").disabled = busy || state === "down";                       // delete unless already gone
     }
     async function refresh() {
       try {
@@ -309,13 +313,15 @@
         if (["running","down","deallocated","stopped"].includes(st)) { clearInterval(poll); poll = null; } }, 15000);
     }
     async function act(path, label) {
-      if (!confirm(label + " the VM?")) return;
-      $("btnStart").disabled = $("btnStop").disabled = true;
+      if (!confirm(label + " the AXA VM?")) return;
+      for (const b of ["btnDeploy","btnStart","btnStop","btnDestroy"]) $(b).disabled = true;
       try { await fetch(path, { method: "POST", headers: { accept: "application/json" } }); } catch {}
       await refresh(); startPolling();
     }
-    $("btnStart").onclick = () => act("/api/start", "Start");
-    $("btnStop").onclick  = () => act("/api/stop", "Stop");
+    $("btnDeploy").onclick  = () => act("/api/deploy", "Deploy");
+    $("btnStart").onclick   = () => act("/api/start", "Start");
+    $("btnStop").onclick    = () => act("/api/stop", "Stop");
+    $("btnDestroy").onclick = () => act("/api/destroy", "Destroy");
     refresh().then(startPolling);
 
     // ---- Azure Virtual Desktop (separate session host, full lifecycle) ----
