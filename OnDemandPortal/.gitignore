@@ -1,0 +1,6 @@
+api/www/
+api/vm-from-image.json
+__pycache__/
+*.pyc
+*.zip
+.DS_Store

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AXA Cloud Portal</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Arial, sans-serif; max-width: 980px;
+           margin: 36px auto; padding: 0 20px; line-height: 1.5; }
+    header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+    h1 { font-size: 1.7rem; margin: 0; }
+    .who { font-size: .85rem; opacity: .8; }
+    h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: .05em; opacity: .7;
+         margin: 30px 0 12px; border-bottom: 1px solid #8883; padding-bottom: 6px; }
+    h3 { font-size: .82rem; font-weight: 600; opacity: .85; margin: 18px 0 2px; }
+    .gdesc { font-size: .78rem; opacity: .6; margin: 0 0 8px; }
+    a { color: #2563eb; text-decoration: none; }
+    .vm { border: 1px solid #8884; border-radius: 14px; padding: 20px; display: flex;
+          align-items: center; gap: 18px; flex-wrap: wrap; }
+    .vm .left { flex: 1; min-width: 220px; }
+    .state { font-size: 1.15rem; font-weight: 600; }
+    .dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 8px;
+           vertical-align: middle; background: #999; }
+    .dot.running { background: #2ecc71; } .dot.down { background: #e74c3c; }
+    .dot.deploying, .dot.deallocating, .dot.starting { background: #f1c40f; }
+    .dot.deallocated, .dot.stopped { background: #e67e22; }
+    .sub { font-size: .85rem; opacity: .7; margin-top: 4px; }
+    button, .btn { font-size: .95rem; padding: 9px 16px; border-radius: 9px; border: 0; cursor: pointer;
+                   color: #fff; display: inline-block; }
+    .start { background: #15803d; } .stop { background: #b45309; } .manage { background: #2563eb; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .tile { display: block; padding: 11px 13px; border: 1px solid #8884; border-radius: 10px; color: inherit;
+            transition: border-color .15s, transform .05s; }
+    .tile:hover { border-color: #2563eb; transform: translateY(-1px); }
+    .tile b { display: block; color: #2563eb; font-size: .92rem; }
+    .hdot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px;
+            vertical-align: middle; background: #9994; }
+    .hdot.up { background: #2ecc71; } .hdot.down { background: #e74c3c; } .hdot.unk { background: #9994; }
+    .tile span { font-size: .76rem; opacity: .65; }
+    .muted { font-size: .8rem; opacity: .6; margin-top: 8px; }
+    .filter { width: 100%; padding: 10px 12px; border-radius: 9px; border: 1px solid #8884;
+              margin: 6px 0 4px; font-size: .95rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>☁️ AXA Cloud Portal</h1>
+    <span class="who" id="who"></span>
+  </header>
+  <p style="margin:2px 0 0"><a href="/vm">VM Manager</a> · <a href="/ops">🛠️ Operations</a> · <a href="/credentials">🔑 Credentials</a></p>
+
+  <h2>Azure AXA VM</h2>
+  <div class="vm">
+    <div class="left">
+      <div class="state"><span class="dot" id="dot"></span><span id="state">checking…</span></div>
+      <div class="sub" id="sub">on-demand VM · auto-stops when idle</div>
+    </div>
+    <button class="start" id="btnStart" disabled>Start</button>
+    <button class="stop"  id="btnStop"  disabled>Stop</button>
+    <a class="btn manage" href="/vm">Open VM Manager →</a>
+  </div>
+  <div class="muted">Full controls (deploy, destroy, connect, services, keep-running hold) are on the VM Manager.</div>
+
+  <h2>🖥️ Azure Virtual Desktop <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.7">(Windows session host)</span></h2>
+  <div class="vm" id="avdCard">
+    <div class="left">
+      <div class="state"><span class="dot" id="avdDot"></span><span id="avdState">checking…</span></div>
+      <div class="sub" style="margin-top:8px; line-height:1.7">
+        Standard_D4ds_v4 · westus3 · Azure AD-joined<br>
+        <b>Connect:</b> <a href="https://client.wvd.microsoft.com/arm/webclient/index.html" target="_blank" rel="noopener">AVD web client ↗</a> — sign in with your Azure AD account (or use the Remote Desktop app and subscribe to your workspace).
+      </div>
+    </div>
+    <button class="start" id="avdDeploy"  disabled>Deploy</button>
+    <button class="start" id="avdStart"   disabled>Start</button>
+    <button class="stop"  id="avdStop"    disabled>Stop</button>
+    <button id="avdDestroy" disabled style="background:#b91c1c;color:#fff">Destroy</button>
+    <a class="btn manage" href="https://client.wvd.microsoft.com/arm/webclient/index.html" target="_blank" rel="noopener">Connect →</a>
+  </div>
+  <div class="muted">Deploy builds the Win11 multi-session host (~8–12 min). Start before connecting; <b>auto-stops after 30 min with no active sessions</b>; Destroy removes the host (control plane kept). You must be assigned to the AVD app group to see the desktop.</div>
+
+  <h2>📧 Mail relay <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.7">(authenticated SMTP submission)</span></h2>
+  <div class="vm">
+    <div class="left">
+      <div class="state"><span class="hdot unk" data-path="mail-relay" id="mailDot"></span><span id="mailState">checking…</span></div>
+      <div class="sub" style="margin-top:8px; line-height:1.7">
+        <b>Server</b> <code>axa.westus3.cloudapp.azure.com</code> · <b>Port</b> <code>587</code> · STARTTLS · AUTH LOGIN<br>
+        <b>User</b> <code>relay@axa.westus3.cloudapp.azure.com</code> · password on <a href="/credentials">🔑 Credentials</a><br>
+        <b>Sends &amp; DKIM-signs for</b> <code>az.aspl.net</code>, <code>poker-mates.com</code> · not an open relay
+      </div>
+    </div>
+  </div>
+
+  <h2>📈 Uptime Kuma <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.7">(self-hosted uptime monitoring)</span></h2>
+  <div class="vm">
+    <div class="left">
+      <div class="state"><span class="hdot unk" data-path="uptime-kuma" id="kumaDot"></span><span id="kumaState">checking…</span></div>
+      <div class="sub" style="margin-top:8px; line-height:1.7">
+        <b>URL</b> <a href="https://uptime.az.aspl.net/" target="_blank" rel="noopener">https://uptime.az.aspl.net</a> · HTTPS behind nginx<br>
+        <b>Login</b> <code>admin</code> · password on <a href="/credentials">🔑 Credentials</a> (set it on first visit)
+      </div>
+    </div>
+    <a class="btn manage" href="https://uptime.az.aspl.net/" target="_blank" rel="noopener">Open Uptime Kuma →</a>
+  </div>
+
+  <h2>Technical — VM services <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.7">(live only while the VM is running)</span></h2>
+  <div class="grid" id="services"></div>
+
+  <h2>Technical — tools &amp; consoles</h2>
+  <input class="filter" id="filter" placeholder="Filter tools… (e.g. dns, ssl, bgp, jwt)" />
+  <div id="toolGroups"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const VM = "https://axa.westus3.cloudapp.azure.com";
+
+    const SERVICES = [
+      ["Website","/","tools landing page"],["Web SSH","/shell/","browser terminal"],
+      ["Database","/db/","Adminer DB editor"],["Guacamole","/guacamole/","browser SSH / RDP"],
+      ["Webmin","/webmin/","system admin"],["Kibana","/kibana/","log search"],
+      ["Grafana","/grafana/","dashboards"],["Prometheus","/prometheus/","metrics"],["Splunk","/splunk/","SIEM"],
+      ["Netdata","/netdata/","real-time metrics"],["ntopng","/ntopng/","traffic analyzer"],
+    ];
+
+    // ★ = added by the portal (not on the VM page). Each group: {desc, items:[[name,url,description]]}.
+    const GROUPS = {
+      "Consoles": { desc: "Cloud management portals, service health, and code repos.", items: [
+        ["Azure Portal","https://portal.azure.com","Manage Azure resources"],
+        ["GitHub (jchirayath)","https://github.com/jchirayath","Your code repositories"],
+        ["Azure DevOps","https://dev.azure.com/devasplnet/","Pipelines & boards"],
+        ["Hostinger hPanel","https://hpanel.hostinger.com","Hostinger hosting control panel"],
+        ["Google Cloud ★","https://console.cloud.google.com","GCP console"],
+        ["AWS Console ★","https://console.aws.amazon.com/","Amazon Web Services"],
+        ["Azure Status ★","https://status.azure.com/","Azure service health"],
+      ]},
+      "DNS & Email": { desc: "Diagnose DNS records, mail routing, and deliverability.", items: [
+        ["dnschecker.org","https://dnschecker.org/","Global DNS propagation"],
+        ["intodns.com","https://intodns.com/","DNS health report"],
+        ["mail-tester.com","https://www.mail-tester.com/","Score your email setup"],
+        ["mxtoolbox.com","https://mxtoolbox.com/","MX / DNS lookups"],
+        ["MxToolbox blacklists","https://mxtoolbox.com/blacklists.aspx","Check IP/domain blacklists"],
+        ["glockapps.com","https://glockapps.com/","Inbox placement test"],
+        ["whatsmydns.net","https://www.whatsmydns.net/","DNS propagation map"],
+        ["dnsperf.com","https://www.dnsperf.com/","DNS provider speed"],
+        ["dnsdumpster.com ★","https://dnsdumpster.com/","Domain recon / subdomains"],
+        ["learndmarc.com ★","https://learndmarc.com/","Visualize DMARC flow"],
+      ]},
+      "Monitoring & Performance": { desc: "Uptime, page speed, and synthetic web testing.", items: [
+        ["Uptime Kuma ★","https://uptime.az.aspl.net/","Your self-hosted uptime monitors (HTTPS)"],
+        ["pingdom.com","https://www.pingdom.com/","Uptime & speed test"],
+        ["gtmetrix.com","https://gtmetrix.com/","Page performance report"],
+        ["uptimerobot.com","https://uptimerobot.com/","Free uptime monitoring"],
+        ["websiteplanet SSL","https://www.websiteplanet.com/webtools/ssl-checker/","SSL certificate checker"],
+        ["webpagetest.org","https://www.webpagetest.org/","Deep waterfall analysis"],
+        ["speedtest.net","https://speedtest.net/","Bandwidth test"],
+        ["PageSpeed ★","https://pagespeed.web.dev/","Google Lighthouse scores"],
+      ]},
+      "Security & TLS": { desc: "Scan TLS config, HTTP headers, and exposure.", items: [
+        ["SSL Labs test","https://www.ssllabs.com/ssltest/","Grade a site's TLS"],
+        ["Sucuri SiteCheck","https://sitecheck.sucuri.net/","Malware / blacklist scan"],
+        ["securityheaders.com","https://securityheaders.com/","HTTP security headers"],
+        ["SSL Labs my client","https://www.ssllabs.com/ssltest/viewMyClient.html","Your browser's TLS"],
+        ["Mozilla Observatory ★","https://observatory.mozilla.org/","Web security scan"],
+        ["hardenize.com ★","https://www.hardenize.com/","Domain security report"],
+        ["hstspreload.org ★","https://hstspreload.org/","HSTS preload status"],
+        ["haveibeenpwned ★","https://haveibeenpwned.com/","Breach exposure check"],
+      ]},
+      "Network": { desc: "IP, ports, geo, and connectivity diagnostics.", items: [
+        ["whatismyipaddress","https://whatismyipaddress.com/","Your public IP & geo"],
+        ["yougetsignal","https://www.yougetsignal.com/tools/","Port & network tools"],
+        ["pingtool.org","https://pingtool.org/","Online ping / traceroute"],
+        ["ping.eu","https://www.ping.eu/","Network test suite"],
+        ["geopeeker.com","https://www.geopeeker.com/","See a site from regions"],
+        ["ipinfo.io ★","https://ipinfo.io/","IP geolocation / ASN"],
+        ["hackertarget ★","https://hackertarget.com/","Recon & scan tools"],
+      ]},
+      "Domains": { desc: "Search, register, and manage domain names.", items: [
+        ["namecheap","https://www.namecheap.com/domains/domain-name-search/","Domain search / registrar"],
+        ["domains.google","https://domains.google/","Google Domains"],
+        ["godaddy","https://www.godaddy.com/domains/domain-name-search","Domain search / registrar"],
+        ["cloudflare registrar","https://www.cloudflare.com/products/registrar/","At-cost domains"],
+        ["porkbun.com","https://porkbun.com/","Domain registrar"],
+        ["hover.com","https://www.hover.com/","Domain registrar"],
+        ["manage.opensrs","https://manage.opensrs.com/","OpenSRS management"],
+        ["resellers.opensrs","https://resellers.opensrs.com/","OpenSRS reseller portal"],
+      ]},
+      "Certificates": { desc: "Issue, inspect, and audit TLS certificates.", items: [
+        ["Let's Encrypt","https://letsencrypt.org/getting-started/","Free certificates"],
+        ["ssl.com","https://www.ssl.com/","Commercial CA"],
+        ["digicert.com","https://www.digicert.com/","Commercial CA"],
+        ["certbot.eff.org","https://certbot.eff.org/","Let's Encrypt client"],
+        ["crt.sh","https://crt.sh/","Cert transparency search"],
+        ["globalsign.com","https://www.globalsign.com/en/ssl/","Commercial CA"],
+      ]},
+      "Crypto & Encoding": { desc: "Encode, decode, hash, and generate secrets.", items: [
+        ["CryptoTool","https://www.cryptool.org/en/cto/","Crypto playground"],
+        ["CyberChef","https://gchq.github.io/CyberChef/","Swiss-army encode/decode"],
+        ["tools4noobs","https://www.tools4noobs.com/online_tools/decrypt/","Decrypt / encode tools"],
+        ["base64decode.org","https://www.base64decode.org/","Base64 encode / decode"],
+        ["md5hashgenerator","https://www.md5hashgenerator.com/","MD5 hashes"],
+        ["passwordsgenerator","https://passwordsgenerator.net/md5-hash-generator/","Hash generators"],
+        ["random.org","https://www.random.org/passwords/","Random passwords"],
+        ["LastPass gen","https://www.lastpass.com/password-generator","Password generator"],
+        ["it-tools.tech ★","https://it-tools.tech/","Big dev-tools collection"],
+        ["regex101.com ★","https://regex101.com/","Regex tester / debugger"],
+        ["jsonlint.com ★","https://jsonlint.com/","JSON validator"],
+        ["epochconverter ★","https://www.epochconverter.com/","Unix time converter"],
+      ]},
+      "JWT & SAML": { desc: "Decode and debug tokens and SAML assertions.", items: [
+        ["jwt.io","https://jwt.io/","Decode / verify JWTs"],
+        ["token.dev","https://token.dev/","JWT builder / decoder"],
+        ["jsonwebtoken.io","https://www.jsonwebtoken.io/","JWT debugger"],
+        ["samltool.com","https://www.samltool.com/","SAML encode / decode"],
+        ["samltester.com","https://www.samltester.com/","Test SAML SSO"],
+        ["samlxml.com","https://www.samlxml.com/","SAML XML tools"],
+      ]},
+      "Internet Testing": { desc: "Browser, IP-leak, and privacy checks.", items: [
+        ["browserleaks","https://browserleaks.com/","What your browser leaks"],
+        ["ipleak.net","https://ipleak.net/","DNS / WebRTC leak test"],
+        ["test-ipv6.com","https://test-ipv6.com/","IPv6 readiness"],
+        ["whoer.net","https://whoer.net/","Anonymity / IP check"],
+      ]},
+      "BGP & Routing": { desc: "Inspect ASNs, prefixes, and global routing.", items: [
+        ["bgp.he.net","https://bgp.he.net/","ASN / prefix lookups"],
+        ["bgpview.io","https://www.bgpview.io/","BGP / ASN explorer"],
+        ["bgpmon.io","https://www.bgpmon.io/","BGP monitoring"],
+        ["stat.ripe.net","https://stat.ripe.net/","RIPE routing stats"],
+        ["routeviews.org","https://www.routeviews.org/","Routing tables"],
+        ["lookingglass.ripe","https://lookingglass.ripe.net/","RIPE looking glass"],
+        ["lg.he.net","https://lg.he.net/","HE looking glass"],
+        ["peeringdb.com","https://www.peeringdb.com/","Peering database"],
+        ["radar.qrator.net","https://radar.qrator.net/","Global routing radar"],
+        ["bgp.tools","https://www.bgp.tools/","Modern BGP explorer"],
+      ]},
+      "Recon / OSINT ★": { desc: "Discover hosts, certificates, and threat intel.", items: [
+        ["shodan.io ★","https://www.shodan.io/","Internet device search"],
+        ["censys.io ★","https://search.censys.io/","Host / cert search"],
+        ["urlscan.io ★","https://urlscan.io/","Scan / analyze URLs"],
+        ["VirusTotal ★","https://www.virustotal.com/","File / URL reputation"],
+      ]},
+    };
+
+    const tile = ([name, href, desc]) =>
+      `<a class="tile" data-s="${(name+' '+href+' '+(desc||'')).toLowerCase()}" href="${href}" target="_blank" rel="noopener"><b>${name}</b>${desc?`<span>${desc}</span>`:""}</a>`;
+    // service tiles carry a health dot keyed by path
+    const svcTile = ([n, p, d]) =>
+      `<a class="tile" href="${VM + p}" target="_blank" rel="noopener"><b><span class="hdot unk" data-path="${p}"></span>${n}</b><span>${d}</span></a>`;
+    $("services").innerHTML = SERVICES.map(svcTile).join("");
+    $("toolGroups").innerHTML = Object.entries(GROUPS).map(([g, {desc, items}]) =>
+      `<div class="tgroup"><h3>${g}</h3><div class="gdesc">${desc}</div><div class="grid">${items.map(tile).join("")}</div></div>`).join("");
+
+    async function loadHealth() {
+      try {
+        const h = await (await fetch("/api/health", { headers: { accept: "application/json" } })).json();
+        document.querySelectorAll(".hdot[data-path]").forEach(d => {
+          const up = h[d.dataset.path];
+          d.className = "hdot " + (up === true ? "up" : up === false ? "down" : "unk");
+        });
+        const m = h["mail-relay"];
+        const ms = document.getElementById("mailState");
+        if (ms) ms.textContent = m === true ? "Relay online (587)" : m === false ? "Relay down" : "unknown (VM off?)";
+        const k = h["uptime-kuma"];
+        const ks = document.getElementById("kumaState");
+        if (ks) ks.textContent = k === true ? "Online" : k === false ? "Down" : "unknown (VM off?)";
+      } catch { /* ignore */ }
+    }
+    loadHealth();
+    setInterval(loadHealth, 30000);
+
+    // filter
+    $("filter").addEventListener("input", (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      document.querySelectorAll("#toolGroups .tile").forEach(t =>
+        t.style.display = (!q || t.dataset.s.includes(q)) ? "" : "none");
+      document.querySelectorAll(".tgroup").forEach(g =>
+        g.style.display = [...g.querySelectorAll(".tile")].some(t => t.style.display !== "none") ? "" : "none");
+    });
+
+    fetch("/.auth/me", { headers: { accept: "application/json" } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { const p = d && d.clientPrincipal;
+        $("who").innerHTML = p ? `${p.userDetails} · <a href="/.auth/logout">sign out</a>` : `<a href="/.auth/logout">sign out</a>`; })
+      .catch(() => {});
+
+    let poll = null;
+    function paintButtons(state) {
+      const busy = ["deploying","deallocating","starting"].includes(state);
+      $("btnStart").disabled = busy || !["deallocated","stopped"].includes(state);
+      $("btnStop").disabled  = busy || state !== "running";
+    }
+    async function refresh() {
+      try {
+        const r = await fetch("/api/status", { headers: { accept: "application/json" } });
+        if (r.status === 401) { location.href = "/.auth/login/aad"; return; }
+        const s = await r.json();
+        const st = (s.state || "unknown").toLowerCase();
+        $("dot").className = "dot " + st;
+        $("state").textContent = s.state || "unknown";
+        $("sub").textContent = s.holdUntil ? "held running until " + new Date(s.holdUntil*1000).toLocaleString()
+          : (st === "running" ? "running · auto-stops when idle" : "on-demand VM · auto-stops when idle");
+        paintButtons(st); return st;
+      } catch (e) { $("state").textContent = "status unavailable"; }
+    }
+    function startPolling() {
+      if (poll) return;
+      poll = setInterval(async () => { const st = await refresh();
+        if (["running","down","deallocated","stopped"].includes(st)) { clearInterval(poll); poll = null; } }, 15000);
+    }
+    async function act(path, label) {
+      if (!confirm(label + " the VM?")) return;
+      $("btnStart").disabled = $("btnStop").disabled = true;
+      try { await fetch(path, { method: "POST", headers: { accept: "application/json" } }); } catch {}
+      await refresh(); startPolling();
+    }
+    $("btnStart").onclick = () => act("/api/start", "Start");
+    $("btnStop").onclick  = () => act("/api/stop", "Stop");
+    refresh().then(startPolling);
+
+    // ---- Azure Virtual Desktop (separate session host, full lifecycle) ----
+    let avdPoll = null;
+    async function avdRefresh() {
+      try {
+        const r = await fetch("/api/avd", { headers: { accept: "application/json" } });
+        if (r.status === 401) return;
+        const s = await r.json();
+        if (!s.configured) { $("avdCard").style.display = "none"; return; }
+        const st = (s.state || "unknown").toLowerCase();
+        $("avdDot").className = "dot " + st;
+        $("avdState").textContent = s.state || "unknown";
+        const isDown = st === "down";
+        const isRunning = st === "running";
+        const isStopped = st === "deallocated" || st === "stopped";
+        const busy = ["deploying", "starting", "deallocating"].includes(st);
+        $("avdDeploy").disabled  = busy || !isDown;
+        $("avdStart").disabled   = busy || !isStopped;
+        $("avdStop").disabled    = busy || !isRunning;
+        $("avdDestroy").disabled = busy || isDown;
+        return st;
+      } catch { /* ignore */ }
+    }
+    function avdStartPolling() {
+      if (avdPoll) return;
+      avdPoll = setInterval(async () => {
+        const st = await avdRefresh();
+        if (["running", "down", "deallocated", "stopped"].includes(st)) { clearInterval(avdPoll); avdPoll = null; }
+      }, 15000);
+    }
+    async function avdAct(action, label) {
+      if (!confirm(label + " the AVD session host?")) return;
+      for (const b of ["avdDeploy","avdStart","avdStop","avdDestroy"]) $(b).disabled = true;
+      try { await fetch("/api/avd?action=" + action, { method: "POST", headers: { accept: "application/json" } }); } catch {}
+      setTimeout(() => { avdRefresh(); avdStartPolling(); }, 2000);
+    }
+    $("avdDeploy").onclick  = () => avdAct("deploy", "Deploy");
+    $("avdStart").onclick   = () => avdAct("start", "Start");
+    $("avdStop").onclick    = () => avdAct("stop", "Stop");
+    $("avdDestroy").onclick = () => avdAct("destroy", "Destroy");
+    avdRefresh(); setInterval(avdRefresh, 20000);
+  </script>
+</body>
+</html>

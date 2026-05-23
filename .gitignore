@@ -1,2 +1,8 @@
 AxaCreate/install_script.sh
 .DS_Store
+
+# Local secrets / tool state (never commit)
+.webui_secret_key
+.claude/
+*.env
+!.env.example

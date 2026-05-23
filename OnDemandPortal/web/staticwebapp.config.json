@@ -1,0 +1,18 @@
+{
+  "routes": [
+    { "route": "/api/*", "allowedRoles": ["authenticated"] },
+    { "route": "/login", "redirect": "/.auth/login/aad" },
+    { "route": "/logout", "redirect": "/.auth/logout" },
+    { "route": "/*", "allowedRoles": ["authenticated"] }
+  ],
+  "responseOverrides": {
+    "401": { "redirect": "/.auth/login/aad", "statusCode": 302 }
+  },
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/.auth/*", "/api/*", "*.css", "*.js"]
+  },
+  "globalHeaders": {
+    "cache-control": "no-store"
+  }
+}

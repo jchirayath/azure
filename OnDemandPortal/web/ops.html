@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>AXA — Operations</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Arial, sans-serif; max-width: 900px; margin: 36px auto; padding: 0 20px; line-height: 1.5; }
+    header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+    h1 { font-size: 1.6rem; margin: 0; }
+    h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: .05em; opacity: .7; margin: 28px 0 10px; border-bottom: 1px solid #8883; padding-bottom: 6px; }
+    a { color: #2563eb; text-decoration: none; }
+    .card { border: 1px solid #8884; border-radius: 12px; padding: 18px; margin: 10px 0; }
+    .row { display: flex; gap: 18px; flex-wrap: wrap; }
+    .metric { flex: 1; min-width: 150px; }
+    .metric .big { font-size: 1.5rem; font-weight: 700; }
+    .metric .lbl { font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; opacity: .6; }
+    table { border-collapse: collapse; width: 100%; margin-top: 6px; }
+    th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid #8883; font-size: .85rem; vertical-align: top; }
+    th { font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; opacity: .6; }
+    code { font-family: ui-monospace, monospace; background: #8882; padding: 2px 6px; border-radius: 6px; font-size: .85rem; }
+    input, select { padding: 7px 9px; border-radius: 8px; border: 1px solid #8884; font-size: .9rem; background: transparent; color: inherit; }
+    button { font-size: .82rem; padding: 6px 12px; border-radius: 8px; border: 1px solid #8884; background: #8881; cursor: pointer; }
+    button.primary { background: #2563eb; color: #fff; border: 0; }
+    button.danger { background: #b91c1c; color: #fff; border: 0; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .ok { color: #15803d; } .bad { color: #b91c1c; } .muted { opacity: .6; font-size: .8rem; }
+    .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .72rem; }
+    .pill.cur { background: #15803d22; color: #15803d; border: 1px solid #15803d55; }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+    .note { font-size: .78rem; opacity: .65; margin: 4px 0 0; }
+    #toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: #111d; color: #fff; padding: 9px 16px; border-radius: 10px; font-size: .85rem; opacity: 0; transition: opacity .2s; pointer-events: none; }
+    #toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛠️ AXA — Operations</h1>
+    <span class="muted" id="who"></span>
+  </header>
+  <p style="margin:2px 0 0"><a href="/">← Portal home</a> · <a href="/vm">VM Manager</a> · <a href="/credentials">🔑 Credentials</a></p>
+
+  <!-- 1. COST -->
+  <h2>💵 Cost &amp; running hours</h2>
+  <div class="card">
+    <div class="row">
+      <div class="metric"><div class="big" id="mtd">…</div><div class="lbl">rg-axa month-to-date</div></div>
+      <div class="metric"><div class="big" id="sessHrs">…</div><div class="lbl">Current session uptime</div></div>
+      <div class="metric"><div class="big" id="sessCost">…</div><div class="lbl">Est. session cost</div></div>
+      <div class="metric"><div class="big" id="rate">…</div><div class="lbl">Hourly rate</div></div>
+    </div>
+
+    <div style="margin-top:16px">
+      <div style="display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:5px">
+        <span><b>Subscription month-to-date</b> <span id="subMtd">…</span> / <span id="budget">…</span> limit</span>
+        <span id="remaining" style="font-weight:600"></span>
+      </div>
+      <div style="height:14px; border-radius:8px; background:#8883; overflow:hidden">
+        <div id="budgetBar" style="height:100%; width:0%; background:#15803d; transition:width .4s"></div>
+      </div>
+      <div class="note" id="budgetNote" style="margin-top:4px"></div>
+    </div>
+
+    <div style="margin-top:14px">
+      <div style="font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; opacity:.6; margin-bottom:4px">All resource groups (MTD)</div>
+      <table><thead><tr><th>Resource group</th><th style="text-align:right">Cost (MTD)</th></tr></thead>
+        <tbody id="rgRows"><tr><td colspan="2" class="muted">loading…</td></tr></tbody></table>
+    </div>
+
+    <p class="note" id="costNote">Cost Management data lags ~8–24h; the $-limit is a display-only target (no Azure budget/alerts). Session cost is an estimate from VM start time × retail hourly rate.</p>
+  </div>
+
+  <!-- 2. SCHEDULE -->
+  <h2>⏰ Scheduled start / stop</h2>
+  <div class="card">
+    <div class="toolbar">
+      <label><input type="checkbox" id="schEnabled" /> Enabled</label>
+    </div>
+    <div class="toolbar">
+      <label>Start <input type="time" id="schStart" value="08:00" /></label>
+      <label>Stop <input type="time" id="schStop" value="19:00" /></label>
+      <label>Days <input id="schDays" value="1-5" style="width:90px" /></label>
+      <label>TZ <input id="schTz" value="America/Los_Angeles" style="width:170px" /></label>
+      <button class="primary" id="schSave">Save schedule</button>
+    </div>
+    <p class="note">Days = ISO weekdays, Mon=1…Sun=7 (e.g. <code>1-5</code> or <code>1,3,5</code>). Inside the window the VM is resumed; outside it the VM is deallocated (a keep-running hold overrides stop). A scheduled start only <b>resumes</b> an existing VM — it never deploys a new one. Checked every 15 min.</p>
+  </div>
+
+  <!-- 3. SNAPSHOTS & IMAGES -->
+  <h2>💾 Snapshots &amp; golden images</h2>
+  <div class="card">
+    <div class="toolbar">
+      <b>OS-disk snapshots</b>
+      <button class="primary" id="snapCreate">Create snapshot</button>
+      <span class="muted">(VM must exist)</span>
+    </div>
+    <table><thead><tr><th>Name</th><th>Size</th><th>Created</th><th>State</th><th></th></tr></thead>
+      <tbody id="snapRows"><tr><td colspan="5" class="muted">loading…</td></tr></tbody></table>
+    <p class="note">Restore swaps the VM's OS disk for one built from the snapshot (deallocates first; start the VM afterwards). Heavier op — a few minutes.</p>
+  </div>
+  <div class="card">
+    <div class="toolbar">
+      <b>Gallery image versions</b>
+      <button class="primary" id="recapture">Recapture from running VM</button>
+    </div>
+    <table><thead><tr><th>Version</th><th>State</th><th>Published</th><th></th></tr></thead>
+      <tbody id="imgRows"><tr><td colspan="4" class="muted">loading…</td></tr></tbody></table>
+    <p class="note">Recapture snapshots the running VM and builds the next image version (replication ~5–15 min). Once it shows <b>Succeeded</b>, “Set current” points new deploys at it (restarts the portal).</p>
+  </div>
+
+  <!-- 4. ACTIVITY -->
+  <h2>📜 Activity log <span class="muted" style="text-transform:none;letter-spacing:0">(last 7 days, rg-axa)</span></h2>
+  <div class="card">
+    <table><thead><tr><th>When</th><th>Action</th><th>Status</th><th>Who</th></tr></thead>
+      <tbody id="actRows"><tr><td colspan="4" class="muted">loading…</td></tr></tbody></table>
+  </div>
+
+  <!-- 5. DNS -->
+  <h2>🌐 DNS — <span id="dnsZone">az.aspl.net</span></h2>
+  <div class="card">
+    <div class="toolbar">
+      <input id="dnsName" placeholder="name (e.g. axa or @)" style="width:160px" />
+      <select id="dnsType"><option>A</option><option>CNAME</option><option>TXT</option><option>MX</option></select>
+      <input id="dnsTtl" type="number" value="300" style="width:80px" title="TTL" />
+      <input id="dnsValues" placeholder="value(s), comma-separated" style="flex:1; min-width:200px" />
+      <button class="primary" id="dnsSave">Add / update</button>
+    </div>
+    <table><thead><tr><th>Name</th><th>Type</th><th>TTL</th><th>Values</th><th></th></tr></thead>
+      <tbody id="dnsRows"><tr><td colspan="5" class="muted">loading…</td></tr></tbody></table>
+    <p class="note">Editable: A, CNAME, TXT, MX. For MX use <code>preference exchange</code> (e.g. <code>10 mail.aspl.net.</code>). The <code>axa</code> A record is re-synced by the portal on each deploy.</p>
+  </div>
+
+  <!-- 6. ON-DEMAND PORTS -->
+  <h2>🔓 Firewall — on-demand ports</h2>
+  <div class="card">
+    <p class="note" style="margin-top:0">Always open: <code>22</code> SSH · <code>80/443</code> nginx · <code>8118</code> Privoxy. The service ports below are <b>closed at the NSG by default</b> and reachable only via nginx (TLS + AAD). Open one to expose it directly on the public IP; close it when done.</p>
+    <table><thead><tr><th>Service</th><th>Port(s)</th><th>State</th><th></th></tr></thead>
+      <tbody id="portRows"><tr><td colspan="4" class="muted">loading…</td></tr></tbody></table>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => (s == null ? "" : String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])));
+    const money = (v, c) => (v == null ? "—" : (c || "$") + Number(v).toFixed(2));
+    let toastT;
+    function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2600); }
+    async function api(path, opts) {
+      const r = await fetch(path, Object.assign({ headers: { accept: "application/json", "content-type": "application/json" } }, opts));
+      if (r.status === 401) { location.href = "/.auth/login/aad"; throw new Error("auth"); }
+      const j = await r.json().catch(() => ({}));
+      if (j.error) throw new Error(j.error);
+      return j;
+    }
+
+    fetch("/.auth/me", { headers: { accept: "application/json" } }).then(r => r.ok ? r.json() : null)
+      .then(d => { const p = d && d.clientPrincipal; $("who").innerHTML = p ? `${esc(p.userDetails)} · <a href="/.auth/logout">sign out</a>` : `<a href="/.auth/logout">sign out</a>`; }).catch(() => {});
+
+    // ---- 1. cost ----
+    async function loadCost() {
+      try {
+        const c = await api("/api/cost");
+        const cur = c.currency === "USD" ? "$" : (c.currency + " ");
+        $("mtd").textContent = c.monthToDate != null ? money(c.monthToDate, cur) : (c.costError ? "n/a" : "—");
+        $("sessHrs").textContent = c.state === "running" ? (c.sessionHours != null ? c.sessionHours + " h" : "running") : (c.state || "—");
+        $("sessCost").textContent = c.sessionCost != null ? money(c.sessionCost, cur) : "—";
+        $("rate").textContent = c.hourlyRate ? money(c.hourlyRate, cur) + "/h" : "—";
+        if (c.costError) $("costNote").textContent = "Cost data unavailable: " + c.costError;
+
+        // Budget bar (subscription MTD vs limit)
+        $("budget").textContent = c.budget != null ? money(c.budget, cur) : "—";
+        $("subMtd").textContent = c.subscriptionMtd != null ? money(c.subscriptionMtd, cur) : "—";
+        if (c.percentUsed != null) {
+          const pct = Math.min(100, c.percentUsed);
+          const over = c.percentUsed >= 100;
+          const warn = c.percentUsed >= 80;
+          $("budgetBar").style.width = pct + "%";
+          $("budgetBar").style.background = over ? "#b91c1c" : warn ? "#b45309" : "#15803d";
+          $("remaining").textContent = (c.remaining >= 0 ? money(c.remaining, cur) + " left" : money(-c.remaining, cur) + " OVER");
+          $("remaining").className = over ? "bad" : "";
+          $("budgetNote").textContent = `${c.percentUsed}% of the ${money(c.budget, cur)} monthly limit used.`;
+        } else if (c.subError) {
+          $("budgetNote").textContent = "Subscription cost unavailable: " + c.subError;
+        }
+        // Per-resource-group breakdown
+        const rgs = c.byResourceGroup || [];
+        $("rgRows").innerHTML = rgs.length ? rgs.map(g => `<tr>
+          <td><code>${esc(g.name)}</code></td>
+          <td style="text-align:right">${money(g.cost, cur)}</td></tr>`).join("")
+          : `<tr><td colspan=2 class=muted>no data</td></tr>`;
+      } catch (e) { $("mtd").textContent = "error"; }
+    }
+
+    // ---- 2. schedule ----
+    async function loadSchedule() {
+      try {
+        const s = await api("/api/schedule");
+        $("schEnabled").checked = !!s.enabled;
+        if (s.start) $("schStart").value = s.start;
+        if (s.stop) $("schStop").value = s.stop;
+        $("schDays").value = s.days || "1-5";
+        $("schTz").value = s.tz || "America/Los_Angeles";
+      } catch (e) { /* ignore */ }
+    }
+    $("schSave").onclick = async () => {
+      try {
+        await api("/api/schedule", { method: "POST", body: JSON.stringify({
+          enabled: $("schEnabled").checked, start: $("schStart").value, stop: $("schStop").value,
+          days: $("schDays").value, tz: $("schTz").value }) });
+        toast("Schedule saved");
+      } catch (e) { toast("Schedule error: " + e.message); }
+    };
+
+    // ---- 3. snapshots & images ----
+    async function loadSnapshots() {
+      try {
+        const { snapshots, error } = await api("/api/snapshots");
+        if (error) { $("snapRows").innerHTML = `<tr><td colspan=5 class=muted>${esc(error)}</td></tr>`; return; }
+        $("snapRows").innerHTML = snapshots.length ? snapshots.map(s => `<tr>
+          <td><code>${esc(s.name)}</code></td><td>${s.sizeGb || "—"} GB</td>
+          <td>${s.created ? new Date(s.created).toLocaleString() : "—"}</td>
+          <td>${esc(s.state || "")}</td>
+          <td style="white-space:nowrap">
+            <button onclick="restoreSnap('${esc(s.name)}')">Restore</button>
+            <button class="danger" onclick="delSnap('${esc(s.name)}')">Delete</button></td></tr>`).join("")
+          : `<tr><td colspan=5 class=muted>No snapshots.</td></tr>`;
+      } catch (e) { $("snapRows").innerHTML = `<tr><td colspan=5 class=muted>error: ${esc(e.message)}</td></tr>`; }
+    }
+    $("snapCreate").onclick = async () => {
+      try { const r = await api("/api/snapshot?action=create", { method: "POST" }); toast(r.message || "Snapshot started"); setTimeout(loadSnapshots, 1500); }
+      catch (e) { toast("Snapshot error: " + e.message); }
+    };
+    window.delSnap = async (name) => {
+      if (!confirm("Delete snapshot " + name + "?")) return;
+      try { await api("/api/snapshot?action=delete&name=" + encodeURIComponent(name), { method: "POST" }); toast("Deleted"); setTimeout(loadSnapshots, 1000); }
+      catch (e) { toast("Delete error: " + e.message); }
+    };
+    window.restoreSnap = async (name) => {
+      if (!confirm("Restore the VM's OS disk from " + name + "?\nThe VM will be deallocated; start it afterwards. This can take several minutes.")) return;
+      toast("Restoring… (may take minutes)");
+      try { const r = await api("/api/snapshot?action=restore&name=" + encodeURIComponent(name), { method: "POST" }); toast(r.message || "Restored"); }
+      catch (e) { toast("Restore error: " + e.message); }
+    };
+
+    async function loadImages() {
+      try {
+        const { images, current, error } = await api("/api/images");
+        if (error) { $("imgRows").innerHTML = `<tr><td colspan=4 class=muted>${esc(error)}</td></tr>`; return; }
+        $("imgRows").innerHTML = images.length ? images.map(v => `<tr>
+          <td><code>${esc(v.version)}</code> ${v.version === current ? '<span class="pill cur">current</span>' : ''}</td>
+          <td>${esc(v.state || "")}</td>
+          <td>${v.published ? new Date(v.published).toLocaleDateString() : "—"}</td>
+          <td>${v.version === current ? "" : `<button onclick="selImg('${esc(v.version)}')" ${v.state === "Succeeded" ? "" : "disabled"}>Set current</button>`}</td></tr>`).join("")
+          : `<tr><td colspan=4 class=muted>No image versions.</td></tr>`;
+      } catch (e) { $("imgRows").innerHTML = `<tr><td colspan=4 class=muted>error: ${esc(e.message)}</td></tr>`; }
+    }
+    $("recapture").onclick = async () => {
+      if (!confirm("Recapture a new golden image from the running VM?")) return;
+      toast("Recapturing… (snapshotting)");
+      try { const r = await api("/api/image?action=recapture", { method: "POST" }); toast(r.message || "Recapture started"); setTimeout(loadImages, 2000); }
+      catch (e) { toast("Recapture error: " + e.message); }
+    };
+    window.selImg = async (version) => {
+      if (!confirm("Point the portal at image " + version + "? (restarts the portal)")) return;
+      try { const r = await api("/api/image?action=select&version=" + encodeURIComponent(version), { method: "POST" }); toast(r.message || "Set"); setTimeout(loadImages, 1500); }
+      catch (e) { toast("Set error: " + e.message); }
+    };
+
+    // ---- 4. activity ----
+    async function loadActivity() {
+      try {
+        const { events, error } = await api("/api/activity");
+        if (error) { $("actRows").innerHTML = `<tr><td colspan=4 class=muted>${esc(error)}</td></tr>`; return; }
+        $("actRows").innerHTML = events.length ? events.map(e => `<tr>
+          <td>${new Date(e.time).toLocaleString()}</td><td>${esc(e.action)}</td>
+          <td class="${e.status === 'Succeeded' ? 'ok' : 'bad'}">${esc(e.status)}</td>
+          <td class="muted">${esc(e.caller)}</td></tr>`).join("")
+          : `<tr><td colspan=4 class=muted>No recent activity.</td></tr>`;
+      } catch (e) { $("actRows").innerHTML = `<tr><td colspan=4 class=muted>error: ${esc(e.message)}</td></tr>`; }
+    }
+
+    // ---- 5. dns ----
+    async function loadDns() {
+      try {
+        const { zone, records, error } = await api("/api/dns");
+        if (zone) $("dnsZone").textContent = zone;
+        if (error) { $("dnsRows").innerHTML = `<tr><td colspan=5 class=muted>${esc(error)}</td></tr>`; return; }
+        $("dnsRows").innerHTML = records.map(r => `<tr>
+          <td><code>${esc(r.name)}</code></td><td>${esc(r.type)}</td><td>${r.ttl || "—"}</td>
+          <td>${r.values.map(v => `<div>${esc(v)}</div>`).join("")}</td>
+          <td style="white-space:nowrap">${r.editable ? `
+            <button onclick='editDns(${JSON.stringify(r).replace(/'/g, "&#39;")})'>Edit</button>
+            <button class="danger" onclick="delDns('${esc(r.name)}','${esc(r.type)}')">Delete</button>` : '<span class="muted">—</span>'}</td></tr>`).join("");
+      } catch (e) { $("dnsRows").innerHTML = `<tr><td colspan=5 class=muted>error: ${esc(e.message)}</td></tr>`; }
+    }
+    window.editDns = (r) => {
+      $("dnsName").value = r.name === "@" ? "@" : r.name;
+      $("dnsType").value = r.type; $("dnsTtl").value = r.ttl || 300;
+      $("dnsValues").value = r.values.join(", ");
+      window.scrollTo({ top: $("dnsName").getBoundingClientRect().top + window.scrollY - 100, behavior: "smooth" });
+    };
+    $("dnsSave").onclick = async () => {
+      try {
+        await api("/api/dns", { method: "POST", body: JSON.stringify({
+          name: $("dnsName").value, type: $("dnsType").value, ttl: $("dnsTtl").value, values: $("dnsValues").value }) });
+        toast("DNS record saved"); $("dnsValues").value = ""; setTimeout(loadDns, 800);
+      } catch (e) { toast("DNS error: " + e.message); }
+    };
+    window.delDns = async (name, type) => {
+      if (!confirm(`Delete ${name} ${type}?`)) return;
+      try { await api("/api/dns?action=delete", { method: "POST", body: JSON.stringify({ name, type }) }); toast("Deleted"); setTimeout(loadDns, 800); }
+      catch (e) { toast("Delete error: " + e.message); }
+    };
+
+    // ---- 6. on-demand ports ----
+    async function loadPorts() {
+      try {
+        const { ports, error } = await api("/api/ports");
+        if (error) { $("portRows").innerHTML = `<tr><td colspan=4 class=muted>${esc(error)}</td></tr>`; return; }
+        $("portRows").innerHTML = ports.map(p => `<tr>
+          <td><b>${esc(p.label)}</b>${p.auth === false ? ' <span class="pill" style="background:#b91c1c22;color:#b91c1c;border:1px solid #b91c1c55">no auth</span>' : ''}</td>
+          <td><code>${p.ports.join(", ")}</code></td>
+          <td class="${p.open ? 'bad' : 'muted'}">${p.open ? '🔴 OPEN to internet' : '🔒 closed'}</td>
+          <td>${p.open
+            ? `<button class="danger" onclick="togglePort('${esc(p.key)}',false)">Close</button>`
+            : `<button onclick="togglePort('${esc(p.key)}',true,${p.auth === false})">Open</button>`}</td></tr>`).join("");
+      } catch (e) { $("portRows").innerHTML = `<tr><td colspan=4 class=muted>error: ${esc(e.message)}</td></tr>`; }
+    }
+    window.togglePort = async (key, open, noAuth) => {
+      if (open && noAuth && !confirm(`${key} has NO authentication. Opening exposes it raw to the internet. Continue?`)) return;
+      if (open && !confirm(`Open ${key} to the public internet?`)) return;
+      toast((open ? "Opening " : "Closing ") + key + "…");
+      try { const r = await api("/api/ports", { method: "POST", body: JSON.stringify({ key, open }) });
+        toast(key + (r.open ? " opened" : " closed")); setTimeout(loadPorts, 1200); }
+      catch (e) { toast("Port error: " + e.message); }
+    };
+
+    loadCost(); loadSchedule(); loadSnapshots(); loadImages(); loadActivity(); loadDns(); loadPorts();
+  </script>
+</body>
+</html>

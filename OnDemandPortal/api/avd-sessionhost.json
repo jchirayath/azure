@@ -1,0 +1,175 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.43.8.12551",
+      "templateHash": "11362435683868370989"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string"
+    },
+    "shName": {
+      "type": "string"
+    },
+    "vmSize": {
+      "type": "string"
+    },
+    "adminUser": {
+      "type": "string"
+    },
+    "adminPassword": {
+      "type": "securestring"
+    },
+    "subnetId": {
+      "type": "string"
+    },
+    "imagePublisher": {
+      "type": "string",
+      "defaultValue": "microsoftwindowsdesktop"
+    },
+    "imageOffer": {
+      "type": "string",
+      "defaultValue": "windows-11"
+    },
+    "imageSku": {
+      "type": "string",
+      "defaultValue": "win11-23h2-avd"
+    },
+    "registrationToken": {
+      "type": "securestring",
+      "defaultValue": ""
+    },
+    "agentUrl": {
+      "type": "string",
+      "defaultValue": "https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RWrmXv"
+    },
+    "bootloaderUrl": {
+      "type": "string",
+      "defaultValue": "https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RWrxrH"
+    }
+  },
+  "variables": {
+    "avdInstallCmd": "[format('powershell -ExecutionPolicy Unrestricted -NoProfile -Command \"New-Item -ItemType Directory -Force -Path C:\\AVDAgent | Out-Null; Invoke-WebRequest -Uri ''{0}'' -OutFile C:\\AVDAgent\\agent.msi -UseBasicParsing; Invoke-WebRequest -Uri ''{1}'' -OutFile C:\\AVDAgent\\boot.msi -UseBasicParsing; Start-Process msiexec.exe -Wait -ArgumentList ''/i C:\\AVDAgent\\agent.msi /quiet /norestart REGISTRATIONTOKEN={2}''; Start-Process msiexec.exe -Wait -ArgumentList ''/i C:\\AVDAgent\\boot.msi /quiet /norestart''; Start-Sleep 8; Restart-Service RDAgentBootLoader -ErrorAction SilentlyContinue\"', parameters('agentUrl'), parameters('bootloaderUrl'), parameters('registrationToken'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2023-09-01",
+      "name": "[format('{0}-nic', parameters('shName'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[parameters('subnetId')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2023-09-01",
+      "name": "[parameters('shName')]",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('shName')]",
+          "adminUsername": "[parameters('adminUser')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[parameters('imagePublisher')]",
+            "offer": "[parameters('imageOffer')]",
+            "sku": "[parameters('imageSku')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[format('{0}-osdisk', parameters('shName'))]",
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "Premium_LRS"
+            }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', parameters('shName')))]"
+            }
+          ]
+        },
+        "securityProfile": {
+          "securityType": "TrustedLaunch",
+          "uefiSettings": {
+            "secureBootEnabled": true,
+            "vTpmEnabled": true
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', parameters('shName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "apiVersion": "2023-09-01",
+      "name": "[format('{0}/{1}', parameters('shName'), 'AADLoginForWindows')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "publisher": "Microsoft.Azure.ActiveDirectory",
+        "type": "AADLoginForWindows",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', parameters('shName'))]"
+      ]
+    },
+    {
+      "condition": "[not(equals(parameters('registrationToken'), ''))]",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "apiVersion": "2023-09-01",
+      "name": "[format('{0}/{1}', parameters('shName'), 'InstallAVDAgent')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "CustomScriptExtension",
+        "typeHandlerVersion": "1.10",
+        "autoUpgradeMinorVersion": true,
+        "protectedSettings": {
+          "commandToExecute": "[variables('avdInstallCmd')]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('shName'), 'AADLoginForWindows')]",
+        "[resourceId('Microsoft.Compute/virtualMachines', parameters('shName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "vmId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Compute/virtualMachines', parameters('shName'))]"
+    },
+    "principalId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Compute/virtualMachines', parameters('shName')), '2023-09-01', 'full').identity.principalId]"
+    }
+  }
+}
