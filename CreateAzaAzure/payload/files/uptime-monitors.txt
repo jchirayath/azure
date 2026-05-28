@@ -1,0 +1,19 @@
+# Uptime Kuma monitors seeded at provision time (module 72-nettools.sh) and
+# clonable onto a live box. One monitor per line:  Display Name|URL
+# Blank lines and lines starting with # are ignored. Seeding is idempotent
+# (matched by URL), so editing this list only adds the new entries.
+#
+# Source of truth for "the sites": ../../../domains/README.md (domain inventory).
+# Scope = live web hosts + chirayath.com subdomains. Parked/expired/dark domains
+# (rajasofrock.com, ragatorock.com, simplyk.net) and ringomedia.org (unregistered)
+# are intentionally excluded — they would only ever alert as DOWN.
+
+IndiaVibes.com|https://indiavibes.com
+ASPL.net|https://aspl.net
+Chirayath.com|https://chirayath.com
+Poker-Mates.com|https://poker-mates.com
+Raga2Rock.com|https://raga2rock.com
+Raga2Rock.in|https://raga2rock.in
+jacob.chirayath.com|https://jacob.chirayath.com
+eagle.chirayath.com|https://eagle.chirayath.com
+www.chirayath.com|https://www.chirayath.com

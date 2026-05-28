@@ -115,6 +115,29 @@ if ! sudo docker ps -a --format '{{.Names}}' | grep -q '^uptime-kuma$'; then
     -p 127.0.0.1:3011:3001 -v uptime-kuma:/app/data louislam/uptime-kuma:1 || warn "uptime-kuma failed to start"
 fi
 
+# Seed the personal-domain monitors (idempotent, matched by URL). Done by writing
+# the rows directly into kuma.db so it needs no admin password and works on both a
+# fresh box and one whose admin was set up by hand. Kuma caches the monitor list in
+# memory, so we stop the container, seed, then start it again to pick the rows up.
+MON_LIST="$AZA_HOME/files/uptime-monitors.txt"
+SEED_PY="$AZA_HOME/files/seed-uptime-kuma.py"
+if [[ -f "$MON_LIST" && -f "$SEED_PY" ]]; then
+  KUMA_DB="$(sudo docker volume inspect uptime-kuma -f '{{ .Mountpoint }}' 2>/dev/null)/kuma.db"
+  # Wait for Kuma to create + migrate its DB (the monitor table must exist).
+  for _ in $(seq 1 30); do
+    sudo python3 -c "import sqlite3,sys; sqlite3.connect(sys.argv[1]).execute('select 1 from monitor limit 1')" "$KUMA_DB" >/dev/null 2>&1 && break
+    sleep 2
+  done
+  if sudo python3 -c "import sqlite3,sys; sqlite3.connect(sys.argv[1]).execute('select 1 from monitor limit 1')" "$KUMA_DB" >/dev/null 2>&1; then
+    log "Seeding Uptime Kuma monitors from $(basename "$MON_LIST")..."
+    sudo docker stop uptime-kuma >/dev/null 2>&1 || true
+    sudo python3 "$SEED_PY" "$KUMA_DB" "$MON_LIST" || warn "uptime monitor seeding reported an error"
+    sudo docker start uptime-kuma >/dev/null 2>&1 || warn "could not restart uptime-kuma after seeding"
+  else
+    warn "Uptime Kuma DB never appeared; skipping monitor seed."
+  fi
+fi
+
 if [[ -n "${CUSTOM_FQDN:-}" ]]; then
   UPTIME_FQDN="uptime.${CUSTOM_FQDN#*.}"          # e.g. uptime.az.aspl.net
   CONF=/etc/nginx/sites-available/aza
