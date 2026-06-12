@@ -6,3 +6,6 @@ AxaCreate/install_script.sh
 .claude/
 *.env
 !.env.example
+
+# Playwright MCP browser scratch (screenshots/snapshots)
+.playwright-mcp/
